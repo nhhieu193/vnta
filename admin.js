@@ -504,7 +504,7 @@ function renderUsersTable(filteredUsers) {
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="pwd-masked" id="pwd-val-${u.id}">${escapeHtml(pwdDisplay)}</span>
-            <button type="button" class="btn-toggle-eye" onclick="toggleUserPwd('${u.id}')" title="${isPwdVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}">
+            <button type="button" class="btn-toggle-eye-row" onclick="toggleUserPwd('${u.id}')" title="${isPwdVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}">
               ${isPwdVisible ? '🙈' : '👁️'}
             </button>
           </div>
