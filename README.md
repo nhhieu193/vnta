@@ -1,6 +1,6 @@
-# Trưa Nay Ăn Gì? — Swiggy Food Spin & Admin Dashboard
+# First Date Ăn Gì? — Swiggy Food Spin & Admin Dashboard
 
-Ứng dụng web giúp giải quyết câu hỏi "Trưa nay ăn gì?" với giao diện hiện đại phong cách Swiggy, hỗ trợ Vòng quay may mắn, Lắc Quẻ Trưa, phân quyền đăng nhập và bảng điều khiển Admin toàn diện.
+Ứng dụng web giúp giải quyết câu hỏi "First date ăn gì?" với giao diện hiện đại phong cách Swiggy, hỗ trợ Vòng quay may mắn, Lắc Quẻ Trưa, phân quyền đăng nhập và bảng điều khiển Admin toàn diện.
 
 ## Tính Năng Nổi Bật
 

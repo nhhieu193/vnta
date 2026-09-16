@@ -1,4 +1,4 @@
-// audio.js - Web Audio API sound synthesizer for Trưa Nay Ăn Gì
+// audio.js - Web Audio API sound synthesizer for First Date Ăn Gì
 
 (function(global) {
   class SoundEngine {

@@ -1,4 +1,4 @@
-// data/dishes.js - Danh mục món ăn phong phú cho Trưa Nay Ăn Gì
+// data/dishes.js - Danh mục món ăn phong phú cho First Date Ăn Gì
 
 (function(global) {
   const FORTUNES = [

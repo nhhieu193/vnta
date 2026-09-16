@@ -95,6 +95,6 @@ app.delete('/api/kv/:key', (req, res) => {
 app.use(express.static(__dirname));
 
 app.listen(PORT, () => {
-  console.log(`Trưa Nay Ăn Gì đang chạy tại http://localhost:${PORT}`);
+  console.log(`First Date Ăn Gì đang chạy tại http://localhost:${PORT}`);
   console.log(`SQLite database: ${DB_PATH}`);
 });

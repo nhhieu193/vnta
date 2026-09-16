@@ -1,4 +1,4 @@
-// app.js - Trưa Nay Ăn Gì? (Vòng Quay Tròn & Hiệu Ứng Tim Bay Liên Tục)
+// app.js - First Date Ăn Gì? (Vòng Quay Tròn & Hiệu Ứng Tim Bay Liên Tục)
 
 // ==========================================
 // USER ACTION TRACKING SYSTEM
@@ -282,12 +282,12 @@ const SLICE_COLORS = [
 // UI SETTINGS (Admin-configurable brand text)
 // ==========================================
 const DEFAULT_UI_SETTINGS = {
-  ketBrandTitle: 'TRƯA NAY ĂN GÌ',
+  ketBrandTitle: 'FIRST DATE ĂN GÌ',
   ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
   queBrandTitle: 'QUẺ TRƯA MAY MẮN',
   queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
   brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
-  footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+  footerText: '© 2026 First Date Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
 };
 
 function getUiSettings() {
@@ -1368,7 +1368,7 @@ function copyShareLink() {
     urlStr = url.toString();
   } catch (e) {}
 
-  const textToCopy = `Trưa nay ăn gì? Hãy thử "${state.activeDish ? state.activeDish.name : 'quay món'}" tại: ${urlStr}`;
+  const textToCopy = `First date ăn gì? Hãy thử "${state.activeDish ? state.activeDish.name : 'quay món'}" tại: ${urlStr}`;
 
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(textToCopy).then(() => {

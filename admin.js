@@ -712,12 +712,12 @@ function handlePreviewYesClick() {
 // TAB 5: CÀI ĐẶT GIAO DIỆN
 // ==========================================
 const DEFAULT_UI_SETTINGS = {
-  ketBrandTitle: 'TRƯA NAY ĂN GÌ',
+  ketBrandTitle: 'FIRST DATE ĂN GÌ',
   ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
   queBrandTitle: 'QUẺ TRƯA MAY MẮN',
   queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
   brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
-  footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+  footerText: '© 2026 First Date Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
 };
 
 function getUiSettings() {
