@@ -19,6 +19,14 @@
 
   // 1) Kéo dữ liệu mới nhất từ server về localStorage (đồng bộ, chặn tải trang
   //    một chút để đảm bảo code chạy sau đọc được dữ liệu đã đồng bộ).
+  //
+  //    QUAN TRỌNG: nếu bước này thất bại (server đang restart, Render "ngủ" chưa
+  //    kịp dậy, mất mạng...), thiết bị sẽ TẮT việc đẩy dữ liệu lên server trong
+  //    suốt phiên này. Nếu không, các đoạn code "nếu localStorage rỗng thì tự
+  //    ghi giá trị mặc định" (getUsers, getPopupSettings...) sẽ ghi đè dữ liệu
+  //    mặc định/rỗng lên server, xóa mất dữ liệu thật mà các thiết bị khác đã
+  //    tích lũy trước đó.
+  var syncEnabled = false;
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', API_BASE + '/api/kv', false);
@@ -30,18 +38,23 @@
           localStorage.setItem(key, data[key]);
         }
       });
+      syncEnabled = true;
+    } else {
+      console.warn('[hydrate] Không lấy được dữ liệu từ server (status ' + xhr.status + ') — tắt đồng bộ ghi trong phiên này, chỉ dùng dữ liệu local.');
     }
   } catch (e) {
-    // Server chưa sẵn sàng (vd. mở file trực tiếp không qua server) -> dùng localStorage cũ
+    // Server chưa sẵn sàng (vd. mở file trực tiếp không qua server, mất mạng...)
+    console.warn('[hydrate] Không kết nối được server — tắt đồng bộ ghi trong phiên này, chỉ dùng dữ liệu local.');
   }
 
   // 2) Ghi đè setItem/removeItem để mọi thay đổi được đẩy lên server
+  //    (chỉ khi bước 1 ở trên thành công, xem giải thích phía trên).
   var nativeSetItem = Storage.prototype.setItem;
   var nativeRemoveItem = Storage.prototype.removeItem;
 
   Storage.prototype.setItem = function (key, value) {
     nativeSetItem.apply(this, arguments);
-    if (this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
+    if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
       fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +65,7 @@
 
   Storage.prototype.removeItem = function (key) {
     nativeRemoveItem.apply(this, arguments);
-    if (this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
+    if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
       fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), { method: 'DELETE' }).catch(function () {});
     }
   };
