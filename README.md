@@ -141,4 +141,3 @@ pm2 save
 
 Sau bước này có thể xóa Web Service trên Render (không cần nữa) — Render chỉ còn hữu ích
 nếu sau này VPS đổi IP hoặc bạn muốn có lớp trung gian dự phòng.
-# vnta
