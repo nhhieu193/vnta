@@ -1,6 +1,6 @@
 // admin.js - Admin Dashboard Logic
 
-const { DISHES, RARITIES } = window.TNAG_DATA;
+const { DISHES } = window.TNAG_DATA;
 
 // ==========================================
 // ACTION TYPES REFERENCE
@@ -79,6 +79,18 @@ const DOM = {
   popupNoQuestions: document.getElementById('popup-no-questions'),
   resetPopupSettings: document.getElementById('reset-popup-settings'),
 
+  // UI settings tab
+  uiSettingsForm: document.getElementById('uisettings-form'),
+  uiBrandLocation: document.getElementById('ui-brand-location'),
+  uiKetTitle: document.getElementById('ui-ket-title'),
+  uiQueTitle: document.getElementById('ui-que-title'),
+  uiKetBadge: document.getElementById('ui-ket-badge'),
+  uiQueBadge: document.getElementById('ui-que-badge'),
+  uiKetCounter: document.getElementById('ui-ket-counter'),
+  uiQueCounter: document.getElementById('ui-que-counter'),
+  uiFooterText: document.getElementById('ui-footer-text'),
+  resetUiSettings: document.getElementById('reset-uisettings'),
+
   // Preview
   previewTitle: document.getElementById('preview-title'),
   previewMessage: document.getElementById('preview-message'),
@@ -95,7 +107,8 @@ const TAB_TITLES = {
   food: '🍲 Kho Đồ Ăn',
   tracking: '📊 Hành Động User',
   users: '👥 Quản Lý Người Dùng',
-  popup: '⚙️ Cài Đặt Popup'
+  popup: '⚙️ Cài Đặt Popup',
+  uisettings: '🎨 Cài Đặt Giao Diện'
 };
 
 function switchTab(tabName) {
@@ -111,6 +124,7 @@ function switchTab(tabName) {
   if (tabName === 'food') renderFoodTab();
   if (tabName === 'users') renderUsersTab();
   if (tabName === 'popup') loadPopupSettings();
+  if (tabName === 'uisettings') loadUiSettings();
 
   // Close mobile sidebar
   DOM.sidebar.classList.remove('open');
@@ -174,7 +188,6 @@ function renderFoodTable(dishes) {
       <td><strong>${dish.name}</strong></td>
       <td>${dish.categoryName || dish.category}</td>
       <td>${dish.priceDisplay}</td>
-      <td><span class="rarity-badge rarity-${dish.rarity}">${RARITIES[dish.rarity]?.name || dish.rarity}</span></td>
       <td style="font-size: 0.82rem; color: var(--admin-text-muted);">${dish.origin}</td>
       <td>${dish.isVegetarian ? '<span class="veg-tag">🌱 Chay</span>' : '<span class="nonveg-tag">Mặn</span>'}</td>
     </tr>
@@ -346,17 +359,15 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// Helper: Log Admin Action to tnag_user_actions
 function logAdminAction(actionType, detail) {
   try {
     const actions = JSON.parse(localStorage.getItem('tnag_user_actions') || '[]');
-    actions.unshift({
-      id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    actions.push({
       timestamp: new Date().toISOString(),
-      actionType: actionType,
+      action: actionType,
       detail: detail
     });
-    if (actions.length > 500) actions.length = 500;
+    if (actions.length > 500) actions.splice(0, actions.length - 500);
     localStorage.setItem('tnag_user_actions', JSON.stringify(actions));
   } catch (e) {}
 }
@@ -637,6 +648,56 @@ function updatePreview() {
 }
 
 // ==========================================
+// TAB 5: CÀI ĐẶT GIAO DIỆN
+// ==========================================
+const DEFAULT_UI_SETTINGS = {
+  ketBrandTitle: 'TRƯA NAY ĂN GÌ',
+  ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
+  ketCounterLabel: 'Lượt quay hôm nay',
+  queBrandTitle: 'QUẺ TRƯA MAY MẮN',
+  queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
+  queCounterLabel: 'Lượt bói quẻ',
+  brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
+  footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+};
+
+function getUiSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('tnag_ui_settings') || 'null');
+    return raw ? { ...DEFAULT_UI_SETTINGS, ...raw } : { ...DEFAULT_UI_SETTINGS };
+  } catch (e) {
+    return { ...DEFAULT_UI_SETTINGS };
+  }
+}
+
+function loadUiSettings() {
+  const settings = getUiSettings();
+  DOM.uiBrandLocation.value = settings.brandLocationText;
+  DOM.uiKetTitle.value = settings.ketBrandTitle;
+  DOM.uiQueTitle.value = settings.queBrandTitle;
+  DOM.uiKetBadge.value = settings.ketBadge;
+  DOM.uiQueBadge.value = settings.queBadge;
+  DOM.uiKetCounter.value = settings.ketCounterLabel;
+  DOM.uiQueCounter.value = settings.queCounterLabel;
+  DOM.uiFooterText.value = settings.footerText;
+}
+
+function saveUiSettings() {
+  const settings = {
+    brandLocationText: DOM.uiBrandLocation.value.trim() || DEFAULT_UI_SETTINGS.brandLocationText,
+    ketBrandTitle: DOM.uiKetTitle.value.trim() || DEFAULT_UI_SETTINGS.ketBrandTitle,
+    queBrandTitle: DOM.uiQueTitle.value.trim() || DEFAULT_UI_SETTINGS.queBrandTitle,
+    ketBadge: DOM.uiKetBadge.value.trim() || DEFAULT_UI_SETTINGS.ketBadge,
+    queBadge: DOM.uiQueBadge.value.trim() || DEFAULT_UI_SETTINGS.queBadge,
+    ketCounterLabel: DOM.uiKetCounter.value.trim() || DEFAULT_UI_SETTINGS.ketCounterLabel,
+    queCounterLabel: DOM.uiQueCounter.value.trim() || DEFAULT_UI_SETTINGS.queCounterLabel,
+    footerText: DOM.uiFooterText.value.trim() || DEFAULT_UI_SETTINGS.footerText
+  };
+  localStorage.setItem('tnag_ui_settings', JSON.stringify(settings));
+  showAdminToast('Đã lưu cài đặt giao diện thành công!');
+}
+
+// ==========================================
 // TOAST NOTIFICATIONS
 // ==========================================
 function showAdminToast(message, type = 'success') {
@@ -753,6 +814,23 @@ function setupEvents() {
       localStorage.removeItem('tnag_popup_settings');
       loadPopupSettings();
       showAdminToast('Đã khôi phục cài đặt popup về mặc định!');
+    });
+  }
+
+  // UI settings: form submit
+  if (DOM.uiSettingsForm) {
+    DOM.uiSettingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveUiSettings();
+    });
+  }
+
+  // UI settings: reset
+  if (DOM.resetUiSettings) {
+    DOM.resetUiSettings.addEventListener('click', () => {
+      localStorage.removeItem('tnag_ui_settings');
+      loadUiSettings();
+      showAdminToast('Đã khôi phục cài đặt giao diện về mặc định!');
     });
   }
 }

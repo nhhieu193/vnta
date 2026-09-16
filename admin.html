@@ -37,6 +37,10 @@
         <span class="nav-icon">⚙️</span>
         <span>Cài Đặt Popup</span>
       </button>
+      <button type="button" class="nav-item" id="nav-uisettings" data-tab="uisettings">
+        <span class="nav-icon">🎨</span>
+        <span>Cài Đặt Giao Diện</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -94,7 +98,6 @@
                 <th>Tên món</th>
                 <th>Danh mục</th>
                 <th>Giá</th>
-                <th>Rarity</th>
                 <th>Xuất xứ</th>
                 <th>Chay</th>
               </tr>
@@ -286,11 +289,73 @@
       </div>
     </section>
 
+    <!-- TAB 5: CÀI ĐẶT GIAO DIỆN -->
+    <section class="tab-content" id="tab-uisettings">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>🎨 Nội dung thương hiệu & nhãn hiển thị</h3>
+        </div>
+        <p class="panel-desc">Tùy chỉnh tên thương hiệu, badge chế độ và nhãn bộ đếm hiển thị trên trang chính.</p>
+
+        <form class="settings-form" id="uisettings-form">
+          <div class="form-group">
+            <label for="ui-brand-location">Dòng vị trí dưới logo (dùng chung cho cả 2 chế độ)</label>
+            <input type="text" id="ui-brand-location" placeholder="VD: ✨ Bữa Trưa Huyền Diệu 🎋" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ui-ket-title">Tên thương hiệu — Vòng quay chọn món</label>
+              <input type="text" id="ui-ket-title" placeholder="VD: TRƯA NAY ĂN GÌ" />
+            </div>
+            <div class="form-group">
+              <label for="ui-que-title">Tên thương hiệu — Quẻ trưa may mắn</label>
+              <input type="text" id="ui-que-title" placeholder="VD: QUẺ TRƯA MAY MẮN" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ui-ket-badge">Badge chế độ — Vòng quay chọn món</label>
+              <input type="text" id="ui-ket-badge" placeholder="VD: CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH" />
+            </div>
+            <div class="form-group">
+              <label for="ui-que-badge">Badge chế độ — Quẻ trưa may mắn</label>
+              <input type="text" id="ui-que-badge" placeholder="VD: QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ui-ket-counter">Nhãn bộ đếm — Vòng quay chọn món</label>
+              <input type="text" id="ui-ket-counter" placeholder="VD: Lượt quay hôm nay" />
+            </div>
+            <div class="form-group">
+              <label for="ui-que-counter">Nhãn bộ đếm — Quẻ trưa may mắn</label>
+              <input type="text" id="ui-que-counter" placeholder="VD: Lượt bói quẻ" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ui-footer-text">Nội dung chân trang (Footer)</label>
+            <textarea id="ui-footer-text" rows="2" placeholder="VD: © 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng!"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="save-btn">💾 Lưu cài đặt</button>
+            <button type="button" class="reset-settings-btn" id="reset-uisettings">🔄 Khôi phục mặc định</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <!-- Toast Notification -->
     <div class="admin-toast" id="admin-toast"></div>
 
   </main>
 
+  <script src="config.js"></script>
+  <script src="hydrate.js"></script>
   <script src="data/dishes.js"></script>
   <script src="admin.js"></script>
 </body>

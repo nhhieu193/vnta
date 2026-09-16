@@ -1,4 +1,4 @@
-// app.js - Trưa Nay Ăn Gì? (Swiggy UI, Vòng Quay Tròn & Hiệu Ứng Tim Bay Liên Tục)
+// app.js - Trưa Nay Ăn Gì? (Vòng Quay Tròn & Hiệu Ứng Tim Bay Liên Tục)
 
 // ==========================================
 // USER ACTION TRACKING SYSTEM
@@ -52,16 +52,57 @@ window.TNAG_TRACKER = (function () {
 
   if (!loginOverlay) return;
 
-  // Show login, hide main content
-  document.body.classList.add('login-active');
-
-  let noClickCount = 0;
-
   // Default accounts initialization
   const DEFAULT_USERS = [
     { id: 'u_admin', username: 'admin', password: 'admin', role: 'admin', createdAt: '2026-09-16' },
     { id: 'u_user', username: 'user', password: '123456', role: 'user', createdAt: '2026-09-16' }
   ];
+
+  const savedUser = (function () {
+    try {
+      const raw = sessionStorage.getItem('tnag_current_user') || localStorage.getItem('tnag_current_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  function updateUserHeaderProfile(user) {
+    const wrap = document.getElementById('user-header-profile');
+    const nameEl = document.getElementById('user-display-name');
+    const adminLink = document.getElementById('admin-quick-link');
+    const logoutBtn = document.getElementById('user-logout-btn');
+    if (!wrap) return;
+
+    if (user) {
+      wrap.style.display = 'inline-flex';
+      if (nameEl) nameEl.textContent = user.username;
+      if (adminLink) {
+        adminLink.style.display = user.role === 'admin' ? 'inline-flex' : 'none';
+      }
+    } else {
+      wrap.style.display = 'none';
+    }
+
+    if (logoutBtn && !logoutBtn.dataset.bound) {
+      logoutBtn.dataset.bound = 'true';
+      logoutBtn.addEventListener('click', function () {
+        sessionStorage.removeItem('tnag_current_user');
+        localStorage.removeItem('tnag_current_user');
+        window.location.reload();
+      });
+    }
+  }
+
+  if (savedUser) {
+    loginOverlay.style.display = 'none';
+    document.body.classList.remove('login-active');
+    updateUserHeaderProfile(savedUser);
+  } else {
+    document.body.classList.add('login-active');
+  }
+
+  let noClickCount = 0;
 
   function getUsers() {
     try {
@@ -150,6 +191,7 @@ window.TNAG_TRACKER = (function () {
     localStorage.setItem('tnag_current_user', sessionData);
 
     window.TNAG_TRACKER.log('LOGIN', 'Đăng nhập thành công: ' + matchedUser.username + ' (' + matchedUser.role + ')');
+    updateUserHeaderProfile(matchedUser);
 
     if (matchedUser.role === 'admin') {
       loginOverlay.classList.add('fade-out');
@@ -216,15 +258,15 @@ window.TNAG_TRACKER = (function () {
 })();
 
 // Access data from window.TNAG_DATA and sound from window.sound
-const { DISHES, RARITIES, FORTUNES } = window.TNAG_DATA;
+const { DISHES, FORTUNES } = window.TNAG_DATA;
 const sound = window.sound;
 
 // Default initial 8 dishes for the circular wheel
 const DEFAULT_WHEEL_IDS = ['dish-1', 'dish-2', 'dish-3', 'dish-4', 'dish-5', 'dish-6', 'dish-7', 'dish-8'];
 
-// Swiggy vibrant foodie slice color palette
+// Vibrant foodie slice color palette
 const SLICE_COLORS = [
-  '#fc8019', // Swiggy Orange
+  '#fc8019', // Vivid Orange
   '#1ba672', // Fresh Veg Green
   '#e23744', // Zesty Red
   '#8b5cf6', // Violet
@@ -235,6 +277,29 @@ const SLICE_COLORS = [
   '#14b8a6', // Teal
   '#f97316'  // Deep Orange
 ];
+
+// ==========================================
+// UI SETTINGS (Admin-configurable brand text)
+// ==========================================
+const DEFAULT_UI_SETTINGS = {
+  ketBrandTitle: 'TRƯA NAY ĂN GÌ',
+  ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
+  ketCounterLabel: 'Lượt quay hôm nay',
+  queBrandTitle: 'QUẺ TRƯA MAY MẮN',
+  queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
+  queCounterLabel: 'Lượt bói quẻ',
+  brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
+  footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+};
+
+function getUiSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('tnag_ui_settings') || 'null');
+    return raw ? { ...DEFAULT_UI_SETTINGS, ...raw } : { ...DEFAULT_UI_SETTINGS };
+  } catch (e) {
+    return { ...DEFAULT_UI_SETTINGS };
+  }
+}
 
 // ==========================================
 // APPLICATION STATE
@@ -263,6 +328,8 @@ const DOM = {
   body: document.body,
   brandTitle: document.getElementById('brand-title'),
   brandIcon: document.getElementById('brand-icon'),
+  brandLocation: document.getElementById('brand-location'),
+  siteFooterText: document.getElementById('footer-text'),
   soundToggleBtn: document.getElementById('sound-toggle-btn'),
   soundIcon: document.getElementById('sound-icon'),
   soundText: document.getElementById('sound-text'),
@@ -553,7 +620,6 @@ function addDishToWheel(dishName) {
     categoryName: 'Món tùy chọn',
     price: 50000,
     priceDisplay: '50.000đ',
-    rarity: 'RARE',
     origin: 'Tự chọn',
     isVegetarian: state.isVegetarian,
     emoji: '🍲',
@@ -615,7 +681,7 @@ function drawWheel(angle = 0) {
   const canvasSize = 460;
   const cx = canvasSize / 2;
   const cy = canvasSize / 2;
-  const radius = cx - 8;
+  const radius = cx - 12;
 
   ctx.clearRect(0, 0, canvasSize, canvasSize);
 
@@ -624,19 +690,19 @@ function drawWheel(angle = 0) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#f8f9fa';
+    ctx.fillStyle = 'rgba(15, 18, 33, 0.9)';
     ctx.fill();
-    ctx.strokeStyle = '#fc8019';
+    ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    ctx.fillStyle = '#fc8019';
+    ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Vòng quay chưa có món', cx, cy - 10);
     ctx.font = '13px "Plus Jakarta Sans", sans-serif';
-    ctx.fillStyle = '#686b78';
+    ctx.fillStyle = '#94a3b8';
     ctx.fillText('Thêm món vào danh sách bên cạnh!', cx, cy + 15);
     ctx.restore();
     return;
@@ -663,9 +729,9 @@ function drawWheel(angle = 0) {
     ctx.fillStyle = baseColor;
     ctx.fill();
 
-    // Slice divider line
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
+    // Slice divider line with metallic crisp shine
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
     // Render Slice Text
@@ -675,8 +741,8 @@ function drawWheel(angle = 0) {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-    ctx.shadowBlur = 3;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 4;
 
     const fontSize = total > 12 ? 11 : total > 8 ? 13 : 14;
     ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
@@ -693,11 +759,20 @@ function drawWheel(angle = 0) {
     ctx.restore();
   }
 
-  // Outer clean rim
+  // Outer glowing gold / mystical rim
   ctx.beginPath();
   ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(252, 128, 25, 0.5)';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 6;
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.7)';
+  ctx.shadowBlur = 14;
+  ctx.stroke();
+
+  // Inner subtle secondary gold ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 6, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.restore();
@@ -771,7 +846,7 @@ function spinCircularWheel() {
       DOM.ctaActionBtn.disabled = false;
 
       incrementCounter();
-      sound.playWin(winningDish.rarity);
+      sound.playWin();
       burstHearts(4);
 
       setTimeout(() => {
@@ -787,8 +862,12 @@ function spinCircularWheel() {
 // THEME SWITCHING
 // ==========================================
 function applyTheme(newTheme, updateUrl = true) {
+  const uiSettings = getUiSettings();
   state.theme = newTheme;
   DOM.body.className = `theme-${newTheme}`;
+
+  if (DOM.brandLocation) DOM.brandLocation.textContent = uiSettings.brandLocationText;
+  if (DOM.siteFooterText) DOM.siteFooterText.textContent = uiSettings.footerText;
 
   if (newTheme === 'ket-hoi-tho-lun') {
     DOM.btnThemeKet.classList.add('active');
@@ -797,11 +876,11 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.btnThemeQue.setAttribute('aria-selected', 'false');
 
     DOM.brandIcon.textContent = '🍲';
-    DOM.brandTitle.textContent = 'SWIGGY • TRƯA NAY ĂN GÌ';
-    DOM.bannerBadge.textContent = 'SWIGGY FOOD PICKER · CHỌN MÓN 3 GIÂY';
+    DOM.brandTitle.textContent = uiSettings.ketBrandTitle;
+    DOM.bannerBadge.textContent = uiSettings.ketBadge;
     DOM.bannerTitle.textContent = 'Hôm nay ăn gì?';
     DOM.bannerSubtitle.textContent = 'Xoay vòng tròn tự chọn món ăn ngẫu nhiên hoặc lắc quẻ trưa thư giãn!';
-    DOM.counterLabel.textContent = 'Lượt quay hôm nay';
+    DOM.counterLabel.textContent = uiSettings.ketCounterLabel;
 
     DOM.arenaKet.classList.add('active');
     DOM.arenaQue.classList.remove('active');
@@ -821,11 +900,11 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.btnThemeKet.setAttribute('aria-selected', 'false');
 
     DOM.brandIcon.textContent = '🎋';
-    DOM.brandTitle.textContent = 'QUẺ TRƯA MAY MẮN';
-    DOM.bannerBadge.textContent = 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC';
+    DOM.brandTitle.textContent = uiSettings.queBrandTitle;
+    DOM.bannerBadge.textContent = uiSettings.queBadge;
     DOM.bannerTitle.textContent = 'Lắc quẻ tầm vị';
     DOM.bannerSubtitle.textContent = 'Cầu một chữ an, thưởng một bữa lành. Lắc ống quẻ tre nhận thông điệp bữa trưa!';
-    DOM.counterLabel.textContent = 'Lượt bói quẻ';
+    DOM.counterLabel.textContent = uiSettings.queCounterLabel;
 
     DOM.arenaQue.classList.add('active');
     DOM.arenaKet.classList.remove('active');
@@ -877,19 +956,6 @@ function getPoolWithFallback() {
 }
 
 function pickWeightedDish(pool) {
-  const rand = Math.random();
-  let selectedRarity = 'COMMON';
-
-  if (rand < 0.05) selectedRarity = 'ANCIENT';
-  else if (rand < 0.15) selectedRarity = 'LEGENDARY';
-  else if (rand < 0.35) selectedRarity = 'EPIC';
-  else if (rand < 0.70) selectedRarity = 'RARE';
-  else selectedRarity = 'COMMON';
-
-  const matchedRarity = pool.filter(d => d.rarity === selectedRarity);
-  if (matchedRarity.length > 0) {
-    return matchedRarity[Math.floor(Math.random() * matchedRarity.length)];
-  }
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -966,7 +1032,7 @@ function startQueProcess() {
     if (DOM.fallenStickWrapper) DOM.fallenStickWrapper.classList.add('popping-out');
     if (DOM.queInstruction) DOM.queInstruction.textContent = `✨ Một quẻ may mắn đã rớt ra ngoài: "${fortune.title}"!`;
 
-    sound.playWin(dish.rarity);
+    sound.playWin();
     burstHearts(6);
     incrementCounter();
 
@@ -1034,7 +1100,7 @@ function closeResultModal() {
 }
 
 // ==========================================
-// SWIGGY FOOD CATALOG RENDERING & SEARCH
+// FOOD CATALOG RENDERING & SEARCH
 // ==========================================
 function renderCatalog(dishes) {
   DOM.catalogGrid.innerHTML = '';
@@ -1056,7 +1122,7 @@ function renderCatalog(dishes) {
     const card = document.createElement('article');
     card.className = 'catalog-item-card';
 
-    // Randomized Swiggy rating & delivery time
+    // Randomized rating & delivery time
     const rating = (4.4 + (idx % 6) * 0.1).toFixed(1);
     const deliveryTime = 20 + (idx % 4) * 5;
 
@@ -1286,12 +1352,13 @@ function setupEventListeners() {
   }
 
   // Sticks click for Quẻ Trưa
-  DOM.fortuneSticks.forEach(stick => {
-    stick.addEventListener('click', () => {
-      const idx = parseInt(stick.dataset.index, 10);
-      drawStick(idx);
+  if (DOM.mysterySticks) {
+    DOM.mysterySticks.forEach(stick => {
+      stick.addEventListener('click', () => {
+        startQueProcess();
+      });
     });
-  });
+  }
 
   // Catalog search input
   DOM.catalogSearch.addEventListener('input', (e) => {

@@ -1,5 +1,5 @@
 @echo off
-cd /d "c:\Users\itdlocadm\Desktop\HH\Test"
+cd /d "%~dp0"
 
 echo ==============================================
 echo   DANG PUSH CODE LEN GITHUB

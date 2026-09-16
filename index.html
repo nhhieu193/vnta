@@ -3,16 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Trưa Nay Ăn Gì? — Swiggy Food Wheel & Quẻ Trưa</title>
-  <meta name="description" content="Chưa biết trưa nay ăn gì? Xoay vòng chọn món theo ngân sách phong cách Swiggy, hoặc Lắc Quẻ Trưa cầu may mắn. Dùng miễn phí, giao đồ ăn nhanh chóng!" />
-  <meta property="og:title" content="Trưa Nay Ăn Gì? — Swiggy Food Spin & Quẻ Trưa" />
-  <meta property="og:description" content="Quay chọn món theo ngân sách hoặc xin quẻ trưa truyền thống. Giao diện Swiggy chuẩn app giao đồ ăn!" />
+  <title>Vòng Quay Cơ Duyên & Gieo Quẻ May Mắn</title>
+  <meta name="description" content="Chưa biết ăn gì? Xoay vòng cơ duyên chọn món hoặc Lắc Quẻ Trưa cầu may mắn trên nền tối huyền ảo lung linh!" />
+  <meta property="og:title" content="Vòng Quay Cơ Duyên & Gieo Quẻ May Mắn" />
+  <meta property="og:description" content="Quay chọn món ăn ngẫu nhiên hoặc xin quẻ trưa thư thái trên giao diện nền tối huyền ảo!" />
   <meta property="og:type" content="website" />
   
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E%3Ctext y=%2226%22 font-size=%2226%22%3E🍲%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="theme-ket-hoi-tho-lun">
+
+  <!-- Ambient Cosmic Aura Background -->
+  <div class="cosmic-ambient-bg" aria-hidden="true">
+    <div class="cosmic-glow cosmic-glow-1"></div>
+    <div class="cosmic-glow cosmic-glow-2"></div>
+    <div class="cosmic-glow cosmic-glow-3"></div>
+  </div>
 
   <!-- ================= LOGIN SCREEN OVERLAY ================= -->
   <div class="login-overlay" id="login-overlay">
@@ -36,8 +43,8 @@
     <div class="login-card" id="login-card">
       <div class="login-logo-wrap">
         <div class="login-logo-circle">🍲</div>
-        <h2 class="login-title"></h2>
-        <p class="login-subtitle"></p>
+        <h2 class="login-title">Vòng Quay Cơ Duyên & Gieo Quẻ May Mắn</h2>
+        <p class="login-subtitle">Đăng nhập để quay vòng chọn món hoặc xin quẻ may mắn</p>
       </div>
 
       <form class="login-form" id="login-form" autocomplete="off">
@@ -60,7 +67,7 @@
       </form>
 
       <div class="login-footer-text">
-        <p></p>
+        <p>Chưa có tài khoản? Liên hệ quản trị viên để được cấp quyền truy cập.</p>
       </div>
     </div>
 
@@ -91,19 +98,23 @@
     </div>
   </div>
 
-  <!-- ================= SWIGGY HEADER ================= -->
+  <!-- ================= SITE HEADER ================= -->
   <header class="site-header">
     <a href="#" class="brand-wrapper" id="brand-link" aria-label="Trưa Nay Ăn Gì">
       <div class="swiggy-logo-badge" id="brand-icon">🍲</div>
       <div class="brand-titles">
-        <h1 id="brand-title"></h1>
-        <div class="brand-location">
-          <span></span> <strong></strong> <span></span>
-        </div>
+        <h1 id="brand-title">TRƯA NAY ĂN GÌ</h1>
+        <div class="brand-location" id="brand-location"></div>
       </div>
     </a>
 
     <div class="header-right">
+      <div class="user-header-profile" id="user-header-profile" style="display:none;">
+        <span class="user-pill-badge" id="user-pill-badge">👤 <span id="user-display-name">user</span></span>
+        <a href="admin.html" class="admin-quick-link" id="admin-quick-link" style="display:none;" title="Vào bảng quản trị">🛡️ <span class="admin-link-text">Admin</span></a>
+        <button type="button" class="user-logout-btn" id="user-logout-btn" title="Đăng xuất">🚪</button>
+      </div>
+
       <button type="button" class="sound-toggle-btn" id="sound-toggle-btn" aria-label="Bật/Tắt âm thanh" title="Âm thanh vòng quay & ống quẻ">
         <span id="sound-icon">🔊</span>
         <span id="sound-text">Bật</span>
@@ -116,7 +127,7 @@
     </div>
   </header>
 
-  <!-- ================= THEME TOOLBAR (Swiggy Segmented Control) ================= -->
+  <!-- ================= THEME TOOLBAR (Segmented Control) ================= -->
   <section class="theme-selector-bar" aria-label="Chọn chế độ quay">
     <div class="theme-pill-group" role="tablist">
       <button type="button" class="theme-btn active" id="btn-theme-ket" data-theme="ket-hoi-tho-lun" role="tab" aria-selected="true">
@@ -414,10 +425,12 @@
 
   <!-- Footer -->
   <footer class="site-footer">
-    <p>© 2026 Swiggy • Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!</p>
+    <p id="footer-text"></p>
     <p style="margin-top: 0.35rem; font-size: 0.75rem;">Vòng Quay May Mắn & Xin Quẻ Trưa Bình An</p>
   </footer>
 
+  <script src="config.js"></script>
+  <script src="hydrate.js"></script>
   <script src="data/dishes.js"></script>
   <script src="audio.js"></script>
   <script src="app.js"></script>

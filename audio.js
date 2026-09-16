@@ -155,24 +155,20 @@
       } catch (e) {}
     }
 
-    playWin(rarity = 'COMMON') {
+    playWin() {
       if (this.muted) return;
       this.init();
       if (!this.ctx) return;
 
       try {
         const now = this.ctx.currentTime;
-        let chords = [440, 554.37, 659.25]; // A major
-
-        if (rarity === 'EPIC' || rarity === 'LEGENDARY' || rarity === 'ANCIENT') {
-          chords = [523.25, 659.25, 783.99, 1046.5]; // C major bright
-        }
+        const chords = [440, 554.37, 659.25]; // A major
 
         chords.forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
 
-          osc.type = rarity === 'ANCIENT' || rarity === 'LEGENDARY' ? 'triangle' : 'sine';
+          osc.type = 'sine';
           const start = now + idx * 0.08;
           osc.frequency.setValueAtTime(freq, start);
 

@@ -4,20 +4,21 @@
 
 :root {
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --admin-bg: #0f111a;
-  --admin-surface: #1a1d2e;
-  --admin-surface-hover: #222640;
-  --admin-border: #2a2e45;
-  --admin-border-light: #343856;
-  --admin-text: #e2e8f0;
-  --admin-text-muted: #8892b0;
-  --admin-text-dim: #5a6380;
-  --admin-accent: #fc8019;
-  --admin-accent-hover: #ff5200;
-  --admin-accent-glow: rgba(252, 128, 25, 0.2);
+  --font-ancient: 'Cinzel', serif;
+  --admin-bg: #080913;
+  --admin-surface: rgba(18, 22, 42, 0.88);
+  --admin-surface-hover: rgba(28, 34, 64, 0.95);
+  --admin-border: rgba(255, 255, 255, 0.09);
+  --admin-border-light: rgba(255, 255, 255, 0.16);
+  --admin-text: #f1f5f9;
+  --admin-text-muted: #94a3b8;
+  --admin-text-dim: #64748b;
+  --admin-accent: #f59e0b;
+  --admin-accent-hover: #d97706;
+  --admin-accent-glow: rgba(245, 158, 11, 0.25);
   --admin-danger: #ef4444;
-  --admin-success: #22c55e;
-  --admin-info: #3b82f6;
+  --admin-success: #10b981;
+  --admin-info: #38bdf8;
   --admin-purple: #8b5cf6;
   --sidebar-width: 260px;
   --header-height: 64px;
@@ -34,7 +35,8 @@
 
 body {
   font-family: var(--font-main);
-  background: var(--admin-bg);
+  background: radial-gradient(circle at 50% 0%, #151833 0%, #080912 70%);
+  background-attachment: fixed;
   color: var(--admin-text);
   min-height: 100vh;
   display: flex;
@@ -51,6 +53,8 @@ body {
   bottom: 0;
   width: var(--sidebar-width);
   background: var(--admin-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--admin-border);
   display: flex;
   flex-direction: column;
@@ -70,24 +74,27 @@ body {
   font-size: 2rem;
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #fc8019 0%, #ff5200 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(252, 128, 25, 0.3);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-title {
   font-size: 1rem;
   font-weight: 800;
   color: #fff;
+  letter-spacing: 0.02em;
 }
 
 .sidebar-subtitle {
   font-size: 0.75rem;
-  color: var(--admin-text-muted);
+  color: #fbbf24;
   margin-top: 2px;
+  font-weight: 600;
 }
 
 .sidebar-nav {
@@ -122,9 +129,10 @@ body {
 }
 
 .nav-item.active {
-  background: var(--admin-accent-glow);
-  color: var(--admin-accent);
-  border: 1px solid rgba(252, 128, 25, 0.2);
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
 }
 
 .nav-icon {
@@ -242,14 +250,15 @@ body {
 
 .admin-badge {
   padding: 6px 14px;
-  background: var(--admin-accent-glow);
-  color: var(--admin-accent);
-  border: 1px solid rgba(252, 128, 25, 0.2);
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 20px;
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
 /* =========================================================
@@ -471,23 +480,6 @@ body {
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
-
-/* Rarity badges */
-.rarity-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.rarity-COMMON { background: rgba(157,153,141,0.15); color: #9d998d; }
-.rarity-RARE { background: rgba(56,189,248,0.15); color: #38bdf8; }
-.rarity-EPIC { background: rgba(192,132,252,0.18); color: #c084fc; }
-.rarity-LEGENDARY { background: rgba(244,63,94,0.2); color: #f43f5e; }
-.rarity-ANCIENT { background: rgba(251,191,36,0.25); color: #fbbf24; }
 
 /* Veg/NonVeg */
 .veg-tag { color: #22c55e; font-weight: 700; }

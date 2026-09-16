@@ -1,0 +1,14 @@
+{
+  "name": "vnta-render-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proxy chạy trên Render (domain + SSL miễn phí), forward toàn bộ request tới server API trên VPS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3"
+  }
+}
