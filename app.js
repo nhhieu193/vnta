@@ -258,7 +258,20 @@ window.TNAG_TRACKER = (function () {
 })();
 
 // Access data from window.TNAG_DATA and sound from window.sound
-const { DISHES, FORTUNES } = window.TNAG_DATA;
+const { DISHES: DEFAULT_DISHES, FORTUNES } = window.TNAG_DATA;
+
+function getDishes() {
+  try {
+    const raw = localStorage.getItem('tnag_dishes');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_DISHES;
+}
+
+const DISHES = getDishes();
 const sound = window.sound;
 
 // Default initial 8 dishes for the circular wheel

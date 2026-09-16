@@ -77,6 +77,67 @@
         <!-- Populated by admin.js -->
       </div>
 
+      <!-- Add/Edit Dish Panel -->
+      <div class="panel add-user-panel">
+        <div class="panel-header">
+          <h3 id="dish-form-title">➕ Thêm Món Mới</h3>
+        </div>
+        <form class="user-form" id="dish-form" autocomplete="off">
+          <div class="user-form-grid">
+            <div class="form-group">
+              <label for="dish-name">Tên món <span class="required-star">*</span></label>
+              <input type="text" id="dish-name" placeholder="VD: Cơm tấm sườn bì chả" required />
+            </div>
+            <div class="form-group">
+              <label for="dish-emoji">Emoji</label>
+              <input type="text" id="dish-emoji" placeholder="VD: 🍖" maxlength="4" />
+            </div>
+            <div class="form-group">
+              <label for="dish-category">Danh mục <span class="required-star">*</span></label>
+              <select id="dish-category">
+                <option value="main">🍲 Món chính</option>
+                <option value="drink">☕ Đồ uống</option>
+                <option value="snack">🍟 Ăn vặt</option>
+                <option value="pub">🍻 Món nhậu</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dish-category-name">Tên danh mục hiển thị</label>
+              <input type="text" id="dish-category-name" placeholder="VD: Cơm & Xôi" />
+            </div>
+            <div class="form-group">
+              <label for="dish-price">Giá (VNĐ) <span class="required-star">*</span></label>
+              <input type="number" id="dish-price" placeholder="VD: 50000" min="1000" step="1000" required />
+            </div>
+            <div class="form-group">
+              <label for="dish-origin">Xuất xứ</label>
+              <input type="text" id="dish-origin" placeholder="VD: Sài Gòn • Việt Nam" />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="dish-image">Link ảnh</label>
+              <input type="text" id="dish-image" placeholder="https://..." />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="dish-desc">Mô tả</label>
+              <textarea id="dish-desc" rows="2" placeholder="Mô tả hấp dẫn về món ăn..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="dish-veg" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="dish-veg" style="width:auto;" /> 🌱 Món chay
+              </label>
+            </div>
+            <div class="form-group form-btn-group">
+              <button type="submit" class="save-btn add-user-btn" id="dish-submit-btn">
+                <span>➕ Thêm Món</span>
+              </button>
+              <button type="button" class="reset-settings-btn" id="dish-cancel-edit-btn" style="display:none;">
+                ✖️ Hủy sửa
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
       <!-- Search & Filter -->
       <div class="panel">
         <div class="panel-header">
@@ -104,6 +165,7 @@
                 <th>Giá</th>
                 <th>Xuất xứ</th>
                 <th>Chay</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody id="food-table-body">

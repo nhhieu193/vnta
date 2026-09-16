@@ -1,6 +1,36 @@
 // admin.js - Admin Dashboard Logic
 
-const { DISHES } = window.TNAG_DATA;
+const { DISHES: DEFAULT_DISHES } = window.TNAG_DATA;
+
+const CATEGORY_LABELS = {
+  main: '🍲 Món chính',
+  drink: '☕ Đồ uống',
+  snack: '🍟 Ăn vặt',
+  pub: '🍻 Món nhậu'
+};
+
+function getDishes() {
+  try {
+    const raw = localStorage.getItem('tnag_dishes');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  localStorage.setItem('tnag_dishes', JSON.stringify(DEFAULT_DISHES));
+  return DEFAULT_DISHES;
+}
+
+function saveDishes(list) {
+  localStorage.setItem('tnag_dishes', JSON.stringify(list));
+}
+
+function computeBudgetRange(price) {
+  if (price <= 35000) return '35k';
+  if (price <= 60000) return '50k';
+  if (price <= 85000) return '70k';
+  return '100k';
+}
 
 // ==========================================
 // ACTION TYPES REFERENCE
@@ -33,7 +63,10 @@ const ACTION_TYPES = {
   OPEN_PLAN:       { label: 'Mở kế hoạch',      icon: '📅', color: '#34d399' },
   CONFIRM_PLAN:    { label: 'Chốt kế hoạch',    icon: '🎉', color: '#f59e0b' },
   PLAN_CAFE_ADDED: { label: 'Thêm quán cà phê', icon: '☕', color: '#a3785c' },
-  PLAN_MOVIE_ADDED:{ label: 'Thêm phim',        icon: '🎬', color: '#8b5cf6' }
+  PLAN_MOVIE_ADDED:{ label: 'Thêm phim',        icon: '🎬', color: '#8b5cf6' },
+  DISH_ADDED:      { label: 'Thêm món ăn',      icon: '🍲', color: '#10b981' },
+  DISH_EDITED:     { label: 'Sửa món ăn',       icon: '✏️', color: '#3b82f6' },
+  DISH_DELETED:    { label: 'Xóa món ăn',       icon: '🗑️', color: '#ef4444' }
 };
 
 // ==========================================
@@ -56,6 +89,19 @@ const DOM = {
   foodSearch: document.getElementById('food-search'),
   foodFilterChips: document.getElementById('food-filter-chips'),
   foodTableBody: document.getElementById('food-table-body'),
+  dishForm: document.getElementById('dish-form'),
+  dishFormTitle: document.getElementById('dish-form-title'),
+  dishName: document.getElementById('dish-name'),
+  dishEmoji: document.getElementById('dish-emoji'),
+  dishCategory: document.getElementById('dish-category'),
+  dishCategoryName: document.getElementById('dish-category-name'),
+  dishPrice: document.getElementById('dish-price'),
+  dishOrigin: document.getElementById('dish-origin'),
+  dishImage: document.getElementById('dish-image'),
+  dishDesc: document.getElementById('dish-desc'),
+  dishVeg: document.getElementById('dish-veg'),
+  dishSubmitBtn: document.getElementById('dish-submit-btn'),
+  dishCancelEditBtn: document.getElementById('dish-cancel-edit-btn'),
 
   // Tracking tab
   trackingStatsGrid: document.getElementById('tracking-stats-grid'),
@@ -156,21 +202,23 @@ function switchTab(tabName) {
 // TAB 1: KHO ĐỒ ĂN
 // ==========================================
 let currentFoodFilter = 'all';
+let editingDishId = null;
 
 function renderFoodStats() {
+  const dishes = getDishes();
   const catCounts = {};
-  DISHES.forEach(d => {
+  dishes.forEach(d => {
     catCounts[d.category] = (catCounts[d.category] || 0) + 1;
   });
 
-  const avgPrice = Math.round(DISHES.reduce((s, d) => s + d.price, 0) / DISHES.length);
-  const vegCount = DISHES.filter(d => d.isVegetarian).length;
+  const avgPrice = Math.round(dishes.reduce((s, d) => s + d.price, 0) / dishes.length);
+  const vegCount = dishes.filter(d => d.isVegetarian).length;
 
   DOM.foodStatsGrid.innerHTML = `
     <div class="stat-card" data-color="orange">
       <span class="stat-icon">🍲</span>
       <span class="stat-label">Tổng số món</span>
-      <span class="stat-value">${DISHES.length}</span>
+      <span class="stat-value">${dishes.length}</span>
     </div>
     <div class="stat-card" data-color="green">
       <span class="stat-icon">🌱</span>
@@ -207,18 +255,24 @@ function renderFoodTable(dishes) {
     <tr>
       <td style="color: var(--admin-text-dim); font-size: 0.78rem;">${dish.id}</td>
       <td style="font-size: 1.4rem;">${dish.emoji}</td>
-      <td><strong>${dish.name}</strong></td>
-      <td>${dish.categoryName || dish.category}</td>
+      <td><strong>${escapeHtml(dish.name)}</strong></td>
+      <td>${escapeHtml(dish.categoryName || dish.category)}</td>
       <td>${dish.priceDisplay}</td>
-      <td style="font-size: 0.82rem; color: var(--admin-text-muted);">${dish.origin}</td>
+      <td style="font-size: 0.82rem; color: var(--admin-text-muted);">${escapeHtml(dish.origin || '')}</td>
       <td>${dish.isVegetarian ? '<span class="veg-tag">🌱 Chay</span>' : '<span class="nonveg-tag">Mặn</span>'}</td>
+      <td>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn-toggle-eye-row" onclick="editDish('${dish.id}')" title="Sửa món">✏️</button>
+          <button type="button" class="btn-delete-user" onclick="deleteDish('${dish.id}')">🗑️ Xóa</button>
+        </div>
+      </td>
     </tr>
   `).join('');
 }
 
 function filterFoodTable() {
   const query = (DOM.foodSearch.value || '').toLowerCase().trim();
-  let filtered = DISHES;
+  let filtered = getDishes();
 
   if (currentFoodFilter !== 'all') {
     filtered = filtered.filter(d => d.category === currentFoodFilter);
@@ -227,8 +281,8 @@ function filterFoodTable() {
   if (query) {
     filtered = filtered.filter(d =>
       d.name.toLowerCase().includes(query) ||
-      d.origin.toLowerCase().includes(query) ||
-      d.categoryName.toLowerCase().includes(query)
+      (d.origin || '').toLowerCase().includes(query) ||
+      (d.categoryName || '').toLowerCase().includes(query)
     );
   }
 
@@ -239,6 +293,100 @@ function renderFoodTab() {
   renderFoodStats();
   filterFoodTable();
 }
+
+function resetDishForm() {
+  editingDishId = null;
+  DOM.dishForm.reset();
+  DOM.dishCategory.value = 'main';
+  DOM.dishFormTitle.textContent = '➕ Thêm Món Mới';
+  DOM.dishSubmitBtn.innerHTML = '<span>➕ Thêm Món</span>';
+  DOM.dishCancelEditBtn.style.display = 'none';
+}
+
+function fillDishForm(dish) {
+  editingDishId = dish.id;
+  DOM.dishName.value = dish.name;
+  DOM.dishEmoji.value = dish.emoji || '';
+  DOM.dishCategory.value = dish.category;
+  DOM.dishCategoryName.value = dish.categoryName || '';
+  DOM.dishPrice.value = dish.price;
+  DOM.dishOrigin.value = dish.origin || '';
+  DOM.dishImage.value = dish.image || '';
+  DOM.dishDesc.value = dish.description || '';
+  DOM.dishVeg.checked = !!dish.isVegetarian;
+  DOM.dishFormTitle.textContent = '✏️ Sửa Món: ' + dish.name;
+  DOM.dishSubmitBtn.innerHTML = '<span>💾 Lưu Thay Đổi</span>';
+  DOM.dishCancelEditBtn.style.display = 'inline-flex';
+  DOM.dishForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function handleDishFormSubmit(e) {
+  e.preventDefault();
+  const name = DOM.dishName.value.trim();
+  const price = parseInt(DOM.dishPrice.value, 10);
+
+  if (!name) {
+    showAdminToast('Vui lòng nhập tên món!', 'error');
+    return;
+  }
+  if (!price || price <= 0) {
+    showAdminToast('Vui lòng nhập giá hợp lệ!', 'error');
+    return;
+  }
+
+  const category = DOM.dishCategory.value;
+  const dishData = {
+    id: editingDishId || ('dish-custom-' + Date.now()),
+    name,
+    category,
+    categoryName: DOM.dishCategoryName.value.trim() || CATEGORY_LABELS[category],
+    price,
+    priceDisplay: price.toLocaleString('vi-VN') + 'đ',
+    budgetRange: computeBudgetRange(price),
+    origin: DOM.dishOrigin.value.trim() || 'Việt Nam',
+    isVegetarian: DOM.dishVeg.checked,
+    emoji: DOM.dishEmoji.value.trim() || '🍽️',
+    image: DOM.dishImage.value.trim() || 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
+    description: DOM.dishDesc.value.trim() || `Món ăn "${name}" hấp dẫn.`
+  };
+
+  const dishes = getDishes();
+
+  if (editingDishId) {
+    const idx = dishes.findIndex(d => d.id === editingDishId);
+    if (idx !== -1) dishes[idx] = dishData;
+    saveDishes(dishes);
+    logAdminAction('DISH_EDITED', `Sửa món "${name}"`);
+    showAdminToast(`Đã lưu thay đổi món "${name}"!`, 'success');
+  } else {
+    dishes.push(dishData);
+    saveDishes(dishes);
+    logAdminAction('DISH_ADDED', `Thêm món "${name}"`);
+    showAdminToast(`Đã thêm món "${name}"!`, 'success');
+  }
+
+  resetDishForm();
+  renderFoodTab();
+}
+
+window.editDish = function (id) {
+  const dish = getDishes().find(d => d.id === id);
+  if (dish) fillDishForm(dish);
+};
+
+window.deleteDish = function (id) {
+  const dishes = getDishes();
+  const dish = dishes.find(d => d.id === id);
+  if (!dish) return;
+
+  if (confirm(`Xóa món "${dish.name}" khỏi kho đồ ăn? Món này cũng sẽ biến mất khỏi vòng quay của người dùng.`)) {
+    saveDishes(dishes.filter(d => d.id !== id));
+    logAdminAction('DISH_DELETED', `Xóa món "${dish.name}"`);
+    showAdminToast(`Đã xóa món "${dish.name}"!`, 'success');
+    if (editingDishId === id) resetDishForm();
+    renderFoodTab();
+  }
+};
 
 // ==========================================
 // TAB 2: HÀNH ĐỘNG USER (TRACKING)
@@ -1003,6 +1151,10 @@ function setupEvents() {
   if (DOM.adminLogoutBtn) {
     DOM.adminLogoutBtn.addEventListener('click', handleLogout);
   }
+
+  // Food tab: add/edit dish form
+  if (DOM.dishForm) DOM.dishForm.addEventListener('submit', handleDishFormSubmit);
+  if (DOM.dishCancelEditBtn) DOM.dishCancelEditBtn.addEventListener('click', resetDishForm);
 
   // Food tab: search
   if (DOM.foodSearch) {
