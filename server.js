@@ -14,6 +14,9 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+// Khóa bí mật để tránh người ngoài gọi thẳng API đọc/ghi dữ liệu (kể cả mật khẩu user)
+// mà không qua trang web. Để trống = không bảo vệ (chỉ nên dùng khi test cục bộ).
+const API_KEY = process.env.API_KEY || '';
 
 fs.mkdirSync(DB_DIR, { recursive: true });
 
@@ -47,6 +50,17 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: 'invalid_json_body' });
   }
   next(err);
+});
+
+// Yêu cầu header X-API-Key khớp với API_KEY cho mọi route /api/kv/*.
+// (Không phải bảo mật tuyệt đối vì key nằm trong config.js phía client, nhưng
+// chặn được việc bot/người lạ dò URL rồi gọi thẳng API mà không qua trang web.)
+app.use('/api/kv', (req, res, next) => {
+  if (!API_KEY) return next();
+  if (req.header('x-api-key') !== API_KEY) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  next();
 });
 
 // Toàn bộ key/value hiện có, dùng để hydrate localStorage khi trang tải lên

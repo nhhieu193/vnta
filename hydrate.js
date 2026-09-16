@@ -16,6 +16,8 @@
   // API_BASE trống = cùng domain (relative path). Khi frontend host trên GitHub Pages
   // và API chạy trên VPS domain khác, khai báo window.TNAG_API_BASE trong config.js.
   var API_BASE = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
+  // Khớp với API_KEY trên server (nếu có cấu hình) để tránh người lạ gọi thẳng API.
+  var API_KEY = window.TNAG_API_KEY || '';
 
   // 1) Kéo dữ liệu mới nhất từ server về localStorage (đồng bộ, chặn tải trang
   //    một chút để đảm bảo code chạy sau đọc được dữ liệu đã đồng bộ).
@@ -30,6 +32,7 @@
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', API_BASE + '/api/kv', false);
+    if (API_KEY) xhr.setRequestHeader('X-API-Key', API_KEY);
     xhr.send(null);
     if (xhr.status === 200) {
       var data = JSON.parse(xhr.responseText);
@@ -55,9 +58,11 @@
   Storage.prototype.setItem = function (key, value) {
     nativeSetItem.apply(this, arguments);
     if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
+      var headers = { 'Content-Type': 'application/json' };
+      if (API_KEY) headers['X-API-Key'] = API_KEY;
       fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({ value: value })
       }).catch(function () {});
     }
@@ -66,7 +71,9 @@
   Storage.prototype.removeItem = function (key) {
     nativeRemoveItem.apply(this, arguments);
     if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
-      fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), { method: 'DELETE' }).catch(function () {});
+      var headers = {};
+      if (API_KEY) headers['X-API-Key'] = API_KEY;
+      fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), { method: 'DELETE', headers: headers }).catch(function () {});
     }
   };
 })();
