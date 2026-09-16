@@ -284,10 +284,8 @@ const SLICE_COLORS = [
 const DEFAULT_UI_SETTINGS = {
   ketBrandTitle: 'TRƯA NAY ĂN GÌ',
   ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
-  ketCounterLabel: 'Lượt quay hôm nay',
   queBrandTitle: 'QUẺ TRƯA MAY MẮN',
   queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
-  queCounterLabel: 'Lượt bói quẻ',
   brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
   footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
 };
@@ -311,7 +309,6 @@ const state = {
   isVegetarian: false,
   isSpinning: false,
   queState: 'idle', // 'idle' | 'shaking' | 'ready'
-  counter: parseInt(localStorage.getItem('tnag_counter') || '1560280', 10),
   activeDish: null,
   activeFortune: null,
 
@@ -342,8 +339,6 @@ const DOM = {
   bannerBadge: document.getElementById('banner-badge'),
   bannerTitle: document.getElementById('banner-title'),
   bannerSubtitle: document.getElementById('banner-subtitle'),
-  counterLabel: document.getElementById('counter-label'),
-  counterValue: document.getElementById('counter-value'),
 
   // Arenas
   arenaKet: document.getElementById('arena-ket'),
@@ -451,9 +446,6 @@ function init() {
   // Apply Theme
   applyTheme(state.theme, false);
 
-  // Counter
-  updateCounterDisplay();
-
   // Render Catalog
   renderCatalog(DISHES);
 
@@ -471,13 +463,6 @@ function init() {
       setTimeout(() => openResultModal(targetDish), 300);
     }
   }
-
-  // Background counter incrementer
-  setInterval(() => {
-    state.counter += Math.floor(Math.random() * 3) + 1;
-    localStorage.setItem('tnag_counter', String(state.counter));
-    updateCounterDisplay();
-  }, 12000);
 }
 
 // ==========================================
@@ -845,7 +830,6 @@ function spinCircularWheel() {
       state.isSpinning = false;
       DOM.ctaActionBtn.disabled = false;
 
-      incrementCounter();
       sound.playWin();
       burstHearts(4);
 
@@ -880,7 +864,6 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.bannerBadge.textContent = uiSettings.ketBadge;
     DOM.bannerTitle.textContent = 'Hôm nay ăn gì?';
     DOM.bannerSubtitle.textContent = 'Xoay vòng tròn tự chọn món ăn ngẫu nhiên hoặc lắc quẻ trưa thư giãn!';
-    DOM.counterLabel.textContent = uiSettings.ketCounterLabel;
 
     DOM.arenaKet.classList.add('active');
     DOM.arenaQue.classList.remove('active');
@@ -904,7 +887,6 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.bannerBadge.textContent = uiSettings.queBadge;
     DOM.bannerTitle.textContent = 'Lắc quẻ tầm vị';
     DOM.bannerSubtitle.textContent = 'Cầu một chữ an, thưởng một bữa lành. Lắc ống quẻ tre nhận thông điệp bữa trưa!';
-    DOM.counterLabel.textContent = uiSettings.queCounterLabel;
 
     DOM.arenaQue.classList.add('active');
     DOM.arenaKet.classList.remove('active');
@@ -1034,7 +1016,6 @@ function startQueProcess() {
 
     sound.playWin();
     burstHearts(6);
-    incrementCounter();
 
     // Giai đoạn 5 (sau 5.0s): Mở hộp thoại giải thơ quẻ và gợi ý món ăn
     setTimeout(() => {
@@ -1177,18 +1158,8 @@ function handleCatalogSearch(e) {
 }
 
 // ==========================================
-// COUNTER & SHARING & UTILITIES
+// SHARING & UTILITIES
 // ==========================================
-function updateCounterDisplay() {
-  DOM.counterValue.textContent = state.counter.toLocaleString('vi-VN');
-}
-
-function incrementCounter() {
-  state.counter += 1;
-  localStorage.setItem('tnag_counter', String(state.counter));
-  updateCounterDisplay();
-}
-
 function showToast(message) {
   DOM.toastMsg.textContent = message;
   DOM.toastMsg.classList.add('show');

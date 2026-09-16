@@ -6,8 +6,7 @@
     'tnag_user_actions',
     'tnag_users',
     'tnag_popup_settings',
-    'tnag_ui_settings',
-    'tnag_counter'
+    'tnag_ui_settings'
   ];
 
   // API_BASE trống = cùng domain (relative path). Khi frontend host trên GitHub Pages

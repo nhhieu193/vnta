@@ -86,8 +86,6 @@ const DOM = {
   uiQueTitle: document.getElementById('ui-que-title'),
   uiKetBadge: document.getElementById('ui-ket-badge'),
   uiQueBadge: document.getElementById('ui-que-badge'),
-  uiKetCounter: document.getElementById('ui-ket-counter'),
-  uiQueCounter: document.getElementById('ui-que-counter'),
   uiFooterText: document.getElementById('ui-footer-text'),
   resetUiSettings: document.getElementById('reset-uisettings'),
 
@@ -653,10 +651,8 @@ function updatePreview() {
 const DEFAULT_UI_SETTINGS = {
   ketBrandTitle: 'TRƯA NAY ĂN GÌ',
   ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
-  ketCounterLabel: 'Lượt quay hôm nay',
   queBrandTitle: 'QUẺ TRƯA MAY MẮN',
   queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
-  queCounterLabel: 'Lượt bói quẻ',
   brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
   footerText: '© 2026 Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
 };
@@ -677,8 +673,6 @@ function loadUiSettings() {
   DOM.uiQueTitle.value = settings.queBrandTitle;
   DOM.uiKetBadge.value = settings.ketBadge;
   DOM.uiQueBadge.value = settings.queBadge;
-  DOM.uiKetCounter.value = settings.ketCounterLabel;
-  DOM.uiQueCounter.value = settings.queCounterLabel;
   DOM.uiFooterText.value = settings.footerText;
 }
 
@@ -689,8 +683,6 @@ function saveUiSettings() {
     queBrandTitle: DOM.uiQueTitle.value.trim() || DEFAULT_UI_SETTINGS.queBrandTitle,
     ketBadge: DOM.uiKetBadge.value.trim() || DEFAULT_UI_SETTINGS.ketBadge,
     queBadge: DOM.uiQueBadge.value.trim() || DEFAULT_UI_SETTINGS.queBadge,
-    ketCounterLabel: DOM.uiKetCounter.value.trim() || DEFAULT_UI_SETTINGS.ketCounterLabel,
-    queCounterLabel: DOM.uiQueCounter.value.trim() || DEFAULT_UI_SETTINGS.queCounterLabel,
     footerText: DOM.uiFooterText.value.trim() || DEFAULT_UI_SETTINGS.footerText
   };
   localStorage.setItem('tnag_ui_settings', JSON.stringify(settings));

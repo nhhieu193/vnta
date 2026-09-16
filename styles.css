@@ -963,21 +963,6 @@ body {
   box-shadow: 0 0 20px var(--theme-glow);
 }
 
-.live-counter-badge {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  background: rgba(20, 25, 50, 0.8);
-  border: 1px solid var(--border-color);
-  padding: 0.35rem 1.05rem;
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
-}
-
-.live-counter-badge strong {
-  color: #fbbf24;
-  font-weight: 800;
-}
-
 /* =========================================================
    BANNER SECTION
    ========================================================= */
