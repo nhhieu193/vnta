@@ -300,6 +300,48 @@ function getUiSettings() {
 }
 
 // ==========================================
+// PLAN (KẾ HOẠCH) — dữ liệu do admin cung cấp
+// ==========================================
+const DEFAULT_PLAN_THANKYOU = {
+  title: 'Cảm ơn bạn!',
+  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc bạn có một buổi trưa thật vui vẻ!'
+};
+
+function getPlanCafes() {
+  try {
+    return JSON.parse(localStorage.getItem('tnag_plan_cafes') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function getPlanMovies() {
+  try {
+    return JSON.parse(localStorage.getItem('tnag_plan_movies') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function getPlanThankyouSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('tnag_plan_thankyou') || 'null');
+    return raw ? { ...DEFAULT_PLAN_THANKYOU, ...raw } : { ...DEFAULT_PLAN_THANKYOU };
+  } catch (e) {
+    return { ...DEFAULT_PLAN_THANKYOU };
+  }
+}
+
+function savePlanEntry(plan) {
+  try {
+    const plans = JSON.parse(localStorage.getItem('tnag_plans') || '[]');
+    plans.push(plan);
+    if (plans.length > 500) plans.splice(0, plans.length - 500);
+    localStorage.setItem('tnag_plans', JSON.stringify(plans));
+  } catch (e) {}
+}
+
+// ==========================================
 // APPLICATION STATE
 // ==========================================
 const state = {
@@ -311,6 +353,8 @@ const state = {
   queState: 'idle', // 'idle' | 'shaking' | 'ready'
   activeDish: null,
   activeFortune: null,
+  planActivity: null, // 'cafe' | 'movie' | 'walk' | null
+  planActivityChoice: null,
 
   // Circular Wheel State
   wheelDishes: [],
@@ -415,7 +459,27 @@ const DOM = {
   btnShare: document.getElementById('btn-share'),
   btnSpinAgain: document.getElementById('btn-spin-again'),
   btnAgainText: document.getElementById('btn-again-text'),
-  toastMsg: document.getElementById('toast-msg')
+  toastMsg: document.getElementById('toast-msg'),
+
+  // Plan (Kế hoạch)
+  btnAddPlan: document.getElementById('btn-add-plan'),
+  planModal: document.getElementById('plan-modal'),
+  planModalCloseBtn: document.getElementById('plan-modal-close-btn'),
+  planDishEmoji: document.getElementById('plan-dish-emoji'),
+  planDishName: document.getElementById('plan-dish-name'),
+  planDate: document.getElementById('plan-date'),
+  planTime: document.getElementById('plan-time'),
+  planActivityChips: document.getElementById('plan-activity-chips'),
+  planCafeDetail: document.getElementById('plan-cafe-detail'),
+  planCafeList: document.getElementById('plan-cafe-list'),
+  planMovieDetail: document.getElementById('plan-movie-detail'),
+  planMovieList: document.getElementById('plan-movie-list'),
+  planNote: document.getElementById('plan-note'),
+  btnConfirmPlan: document.getElementById('btn-confirm-plan'),
+  planThankyouModal: document.getElementById('plan-thankyou-modal'),
+  planThankyouTitle: document.getElementById('plan-thankyou-title'),
+  planThankyouMessage: document.getElementById('plan-thankyou-message'),
+  planThankyouCloseBtn: document.getElementById('plan-thankyou-close-btn')
 };
 
 // Canvas context
@@ -1081,6 +1145,131 @@ function closeResultModal() {
 }
 
 // ==========================================
+// PLAN MODAL (KẾ HOẠCH)
+// ==========================================
+function renderPlanSuggestionList(container, items, activityType) {
+  if (!container) return;
+  if (!items || items.length === 0) {
+    container.innerHTML = `<p class="plan-empty-hint">Chưa có gợi ý nào từ admin.</p>`;
+    return;
+  }
+  container.innerHTML = items.map(item => `
+    <button type="button" class="plan-suggestion-card" data-activity="${activityType}" data-name="${escapeHtmlAttr(item.name)}">
+      <span class="plan-suggestion-name">${escapeHtmlAttr(item.name)}</span>
+      ${item.note ? `<span class="plan-suggestion-note">${escapeHtmlAttr(item.note)}</span>` : ''}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.plan-suggestion-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const alreadySelected = card.classList.contains('selected');
+      container.querySelectorAll('.plan-suggestion-card').forEach(c => c.classList.remove('selected'));
+      if (alreadySelected) {
+        state.planActivityChoice = null;
+      } else {
+        card.classList.add('selected');
+        state.planActivityChoice = card.dataset.name;
+      }
+    });
+  });
+}
+
+function escapeHtmlAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function selectPlanActivity(activity) {
+  state.planActivity = activity;
+  state.planActivityChoice = null;
+
+  DOM.planActivityChips.querySelectorAll('.plan-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.activity === activity);
+  });
+
+  DOM.planCafeDetail.style.display = activity === 'cafe' ? 'block' : 'none';
+  DOM.planMovieDetail.style.display = activity === 'movie' ? 'block' : 'none';
+
+  if (activity === 'cafe') {
+    renderPlanSuggestionList(DOM.planCafeList, getPlanCafes(), 'cafe');
+  } else if (activity === 'movie') {
+    renderPlanSuggestionList(DOM.planMovieList, getPlanMovies(), 'movie');
+  }
+}
+
+function openPlanModal() {
+  if (!state.activeDish) return;
+  window.TNAG_TRACKER.log('OPEN_PLAN', 'Mở kế hoạch cho món: ' + state.activeDish.name);
+
+  DOM.planDishEmoji.textContent = state.activeDish.emoji || '🍲';
+  DOM.planDishName.textContent = state.activeDish.name;
+
+  const now = new Date();
+  DOM.planDate.value = now.toISOString().slice(0, 10);
+  DOM.planTime.value = now.toTimeString().slice(0, 5);
+  DOM.planNote.value = '';
+
+  state.planActivity = null;
+  state.planActivityChoice = null;
+  DOM.planActivityChips.querySelectorAll('.plan-chip').forEach(chip => chip.classList.remove('active'));
+  DOM.planCafeDetail.style.display = 'none';
+  DOM.planMovieDetail.style.display = 'none';
+
+  closeResultModal();
+  DOM.planModal.classList.add('open');
+}
+
+function closePlanModal() {
+  DOM.planModal.classList.remove('open');
+}
+
+const PLAN_ACTIVITY_LABELS = { cafe: 'Cà phê', movie: 'Xem phim', walk: 'Dạo phố' };
+
+function submitPlan() {
+  const dish = state.activeDish;
+  if (!dish) return;
+
+  const currentUser = (function () {
+    try {
+      const raw = sessionStorage.getItem('tnag_current_user') || localStorage.getItem('tnag_current_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  const plan = {
+    id: 'plan_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    dishName: dish.name,
+    date: DOM.planDate.value || '',
+    time: DOM.planTime.value || '',
+    activity: state.planActivity,
+    activityLabel: state.planActivity ? PLAN_ACTIVITY_LABELS[state.planActivity] : '',
+    activityChoice: state.planActivityChoice,
+    note: DOM.planNote.value.trim(),
+    user: currentUser ? currentUser.username : 'khách'
+  };
+
+  savePlanEntry(plan);
+  window.TNAG_TRACKER.log('CONFIRM_PLAN', `Chốt kế hoạch: ${dish.name}${plan.activityLabel ? ' → ' + plan.activityLabel : ''}${plan.activityChoice ? ' (' + plan.activityChoice + ')' : ''}`);
+
+  closePlanModal();
+
+  const thankyou = getPlanThankyouSettings();
+  DOM.planThankyouTitle.textContent = thankyou.title;
+  DOM.planThankyouMessage.textContent = thankyou.message;
+  DOM.planThankyouModal.classList.add('open');
+}
+
+function closePlanThankyouModal() {
+  DOM.planThankyouModal.classList.remove('open');
+}
+
+// ==========================================
 // FOOD CATALOG RENDERING & SEARCH
 // ==========================================
 function renderCatalog(dishes) {
@@ -1344,6 +1533,30 @@ function setupEventListeners() {
   });
 
   DOM.btnShare.addEventListener('click', () => { window.TNAG_TRACKER.log('SHARE_DISH', 'Chia sẻ: ' + (state.activeDish ? state.activeDish.name : '')); copyShareLink(); });
+
+  // Plan modal events
+  if (DOM.btnAddPlan) DOM.btnAddPlan.addEventListener('click', openPlanModal);
+  if (DOM.planModalCloseBtn) DOM.planModalCloseBtn.addEventListener('click', closePlanModal);
+  if (DOM.planModal) {
+    DOM.planModal.addEventListener('click', (e) => {
+      if (e.target === DOM.planModal) closePlanModal();
+    });
+  }
+  if (DOM.planActivityChips) {
+    DOM.planActivityChips.querySelectorAll('.plan-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const activity = chip.dataset.activity;
+        selectPlanActivity(state.planActivity === activity ? null : activity);
+      });
+    });
+  }
+  if (DOM.btnConfirmPlan) DOM.btnConfirmPlan.addEventListener('click', submitPlan);
+  if (DOM.planThankyouCloseBtn) DOM.planThankyouCloseBtn.addEventListener('click', closePlanThankyouModal);
+  if (DOM.planThankyouModal) {
+    DOM.planThankyouModal.addEventListener('click', (e) => {
+      if (e.target === DOM.planThankyouModal) closePlanThankyouModal();
+    });
+  }
 
   DOM.btnSpinAgain.addEventListener('click', () => {
     window.TNAG_TRACKER.log('SPIN_AGAIN', 'Quay/xin lại lần nữa');

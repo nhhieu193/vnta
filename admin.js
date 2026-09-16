@@ -29,7 +29,11 @@ const ACTION_TYPES = {
   QUICK_FILTER:    { label: 'Từ bộ lọc',         icon: '⚡', color: '#fcd34d' },
   QUICK_RESET:     { label: 'Khôi phục gốc',    icon: '🔄', color: '#cbd5e1' },
   USER_ADDED:      { label: 'Thêm tài khoản',   icon: '👤', color: '#10b981' },
-  USER_DELETED:    { label: 'Xóa tài khoản',    icon: '🗑️', color: '#ef4444' }
+  USER_DELETED:    { label: 'Xóa tài khoản',    icon: '🗑️', color: '#ef4444' },
+  OPEN_PLAN:       { label: 'Mở kế hoạch',      icon: '📅', color: '#34d399' },
+  CONFIRM_PLAN:    { label: 'Chốt kế hoạch',    icon: '🎉', color: '#f59e0b' },
+  PLAN_CAFE_ADDED: { label: 'Thêm quán cà phê', icon: '☕', color: '#a3785c' },
+  PLAN_MOVIE_ADDED:{ label: 'Thêm phim',        icon: '🎬', color: '#8b5cf6' }
 };
 
 // ==========================================
@@ -95,7 +99,25 @@ const DOM = {
   previewExtra: document.getElementById('preview-extra'),
   previewQuestion: document.getElementById('preview-question'),
   previewBtnYes: document.getElementById('preview-btn-yes'),
-  previewBtnNo: document.getElementById('preview-btn-no')
+  previewBtnNo: document.getElementById('preview-btn-no'),
+
+  // Plan tab
+  planStatsGrid: document.getElementById('plan-stats-grid'),
+  addCafeForm: document.getElementById('add-cafe-form'),
+  newCafeName: document.getElementById('new-cafe-name'),
+  newCafeNote: document.getElementById('new-cafe-note'),
+  cafeTableBody: document.getElementById('cafe-table-body'),
+  addMovieForm: document.getElementById('add-movie-form'),
+  newMovieName: document.getElementById('new-movie-name'),
+  newMovieNote: document.getElementById('new-movie-note'),
+  movieTableBody: document.getElementById('movie-table-body'),
+  planThankyouForm: document.getElementById('plan-thankyou-form'),
+  planThankyouTitleInput: document.getElementById('plan-thankyou-title-input'),
+  planThankyouMessageInput: document.getElementById('plan-thankyou-message-input'),
+  resetPlanThankyou: document.getElementById('reset-plan-thankyou'),
+  planRefreshBtn: document.getElementById('plan-refresh-btn'),
+  planClearBtn: document.getElementById('plan-clear-btn'),
+  planTableBody: document.getElementById('plan-table-body')
 };
 
 // ==========================================
@@ -106,7 +128,8 @@ const TAB_TITLES = {
   tracking: '📊 Hành Động User',
   users: '👥 Quản Lý Người Dùng',
   popup: '⚙️ Cài Đặt Popup',
-  uisettings: '🎨 Cài Đặt Giao Diện'
+  uisettings: '🎨 Cài Đặt Giao Diện',
+  plan: '📅 Kế Hoạch'
 };
 
 function switchTab(tabName) {
@@ -123,6 +146,7 @@ function switchTab(tabName) {
   if (tabName === 'users') renderUsersTab();
   if (tabName === 'popup') loadPopupSettings();
   if (tabName === 'uisettings') loadUiSettings();
+  if (tabName === 'plan') renderPlanTab();
 
   // Close mobile sidebar
   DOM.sidebar.classList.remove('open');
@@ -690,6 +714,215 @@ function saveUiSettings() {
 }
 
 // ==========================================
+// TAB 6: KẾ HOẠCH
+// ==========================================
+const DEFAULT_PLAN_THANKYOU = {
+  title: 'Cảm ơn bạn!',
+  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc bạn có một buổi trưa thật vui vẻ!'
+};
+
+function getPlanCafes() {
+  try {
+    return JSON.parse(localStorage.getItem('tnag_plan_cafes') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+function savePlanCafes(list) {
+  localStorage.setItem('tnag_plan_cafes', JSON.stringify(list));
+}
+
+function getPlanMovies() {
+  try {
+    return JSON.parse(localStorage.getItem('tnag_plan_movies') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+function savePlanMovies(list) {
+  localStorage.setItem('tnag_plan_movies', JSON.stringify(list));
+}
+
+function getPlanThankyouSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('tnag_plan_thankyou') || 'null');
+    return raw ? { ...DEFAULT_PLAN_THANKYOU, ...raw } : { ...DEFAULT_PLAN_THANKYOU };
+  } catch (e) {
+    return { ...DEFAULT_PLAN_THANKYOU };
+  }
+}
+
+function getSubmittedPlans() {
+  try {
+    return JSON.parse(localStorage.getItem('tnag_plans') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderPlanStats() {
+  const plans = getSubmittedPlans();
+  const cafes = getPlanCafes();
+  const movies = getPlanMovies();
+  const cafeChoices = plans.filter(p => p.activity === 'cafe').length;
+  const movieChoices = plans.filter(p => p.activity === 'movie').length;
+
+  DOM.planStatsGrid.innerHTML = `
+    <div class="stat-card" data-color="orange">
+      <span class="stat-icon">📋</span>
+      <span class="stat-label">Tổng kế hoạch đã chốt</span>
+      <span class="stat-value">${plans.length}</span>
+    </div>
+    <div class="stat-card" data-color="green">
+      <span class="stat-icon">☕</span>
+      <span class="stat-label">Chọn Cà phê</span>
+      <span class="stat-value">${cafeChoices}</span>
+    </div>
+    <div class="stat-card" data-color="blue">
+      <span class="stat-icon">🎬</span>
+      <span class="stat-label">Chọn Xem phim</span>
+      <span class="stat-value">${movieChoices}</span>
+    </div>
+    <div class="stat-card" data-color="purple">
+      <span class="stat-icon">📍</span>
+      <span class="stat-label">Gợi ý (quán / phim)</span>
+      <span class="stat-value">${cafes.length} / ${movies.length}</span>
+    </div>
+  `;
+}
+
+function renderCafeTable() {
+  const cafes = getPlanCafes();
+  if (cafes.length === 0) {
+    DOM.cafeTableBody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><p class="empty-state-text">Chưa có quán cà phê nào</p></div></td></tr>`;
+    return;
+  }
+  DOM.cafeTableBody.innerHTML = cafes.map((c, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td><strong>${escapeHtml(c.name)}</strong></td>
+      <td style="color: var(--admin-text-muted);">${escapeHtml(c.note || '')}</td>
+      <td><button type="button" class="btn-delete-user" onclick="deletePlanCafe('${c.id}')">🗑️ Xóa</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderMovieTable() {
+  const movies = getPlanMovies();
+  if (movies.length === 0) {
+    DOM.movieTableBody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><p class="empty-state-text">Chưa có phim nào</p></div></td></tr>`;
+    return;
+  }
+  DOM.movieTableBody.innerHTML = movies.map((m, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td><strong>${escapeHtml(m.name)}</strong></td>
+      <td style="color: var(--admin-text-muted);">${escapeHtml(m.note || '')}</td>
+      <td><button type="button" class="btn-delete-user" onclick="deletePlanMovie('${m.id}')">🗑️ Xóa</button></td>
+    </tr>
+  `).join('');
+}
+
+function handleAddCafe(e) {
+  e.preventDefault();
+  const name = DOM.newCafeName.value.trim();
+  if (!name) {
+    showAdminToast('Vui lòng nhập tên quán!', 'error');
+    return;
+  }
+  const cafes = getPlanCafes();
+  cafes.push({ id: 'cafe_' + Date.now(), name, note: DOM.newCafeNote.value.trim() });
+  savePlanCafes(cafes);
+  logAdminAction('PLAN_CAFE_ADDED', `Thêm quán cà phê "${name}"`);
+  showAdminToast(`Đã thêm quán "${name}"!`, 'success');
+  DOM.addCafeForm.reset();
+  renderCafeTable();
+  renderPlanStats();
+}
+
+function handleAddMovie(e) {
+  e.preventDefault();
+  const name = DOM.newMovieName.value.trim();
+  if (!name) {
+    showAdminToast('Vui lòng nhập tên phim!', 'error');
+    return;
+  }
+  const movies = getPlanMovies();
+  movies.push({ id: 'movie_' + Date.now(), name, note: DOM.newMovieNote.value.trim() });
+  savePlanMovies(movies);
+  logAdminAction('PLAN_MOVIE_ADDED', `Thêm phim "${name}"`);
+  showAdminToast(`Đã thêm phim "${name}"!`, 'success');
+  DOM.addMovieForm.reset();
+  renderMovieTable();
+  renderPlanStats();
+}
+
+window.deletePlanCafe = function (id) {
+  if (!confirm('Xóa quán cà phê này khỏi danh sách gợi ý?')) return;
+  savePlanCafes(getPlanCafes().filter(c => c.id !== id));
+  renderCafeTable();
+  renderPlanStats();
+  showAdminToast('Đã xóa quán cà phê!');
+};
+
+window.deletePlanMovie = function (id) {
+  if (!confirm('Xóa phim này khỏi danh sách gợi ý?')) return;
+  savePlanMovies(getPlanMovies().filter(m => m.id !== id));
+  renderMovieTable();
+  renderPlanStats();
+  showAdminToast('Đã xóa phim!');
+};
+
+function loadPlanThankyouSettings() {
+  const settings = getPlanThankyouSettings();
+  DOM.planThankyouTitleInput.value = settings.title;
+  DOM.planThankyouMessageInput.value = settings.message;
+}
+
+function savePlanThankyouSettings() {
+  const settings = {
+    title: DOM.planThankyouTitleInput.value.trim() || DEFAULT_PLAN_THANKYOU.title,
+    message: DOM.planThankyouMessageInput.value.trim() || DEFAULT_PLAN_THANKYOU.message
+  };
+  localStorage.setItem('tnag_plan_thankyou', JSON.stringify(settings));
+  showAdminToast('Đã lưu popup cảm ơn thành công!');
+}
+
+function renderPlanTable() {
+  const plans = getSubmittedPlans().slice().reverse();
+  if (plans.length === 0) {
+    DOM.planTableBody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">Chưa có kế hoạch nào được chốt</p></div></td></tr>`;
+    return;
+  }
+  DOM.planTableBody.innerHTML = plans.map((p, idx) => {
+    const d = new Date(p.timestamp);
+    const timeStr = isNaN(d.getTime()) ? p.timestamp : d.toLocaleString('vi-VN');
+    const activityText = p.activityLabel
+      ? `${p.activityLabel}${p.activityChoice ? ' — ' + escapeHtml(p.activityChoice) : ''}`
+      : '<span style="color: var(--admin-text-dim);">—</span>';
+    return `
+      <tr>
+        <td>${plans.length - idx}</td>
+        <td style="font-size: 0.78rem; color: var(--admin-text-dim);">${timeStr}</td>
+        <td><strong>${escapeHtml(p.dishName || '')}</strong></td>
+        <td>${escapeHtml(p.date || '')} ${escapeHtml(p.time || '')}</td>
+        <td>${activityText}</td>
+        <td style="font-size: 0.82rem; color: var(--admin-text-muted);">${escapeHtml(p.note || '')}</td>
+        <td>${escapeHtml(p.user || '')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPlanTab() {
+  renderPlanStats();
+  renderCafeTable();
+  renderMovieTable();
+  loadPlanThankyouSettings();
+  renderPlanTable();
+}
+
+// ==========================================
 // TOAST NOTIFICATIONS
 // ==========================================
 function showAdminToast(message, type = 'success') {
@@ -823,6 +1056,38 @@ function setupEvents() {
       localStorage.removeItem('tnag_ui_settings');
       loadUiSettings();
       showAdminToast('Đã khôi phục cài đặt giao diện về mặc định!');
+    });
+  }
+
+  // Plan tab: add cafe / movie
+  if (DOM.addCafeForm) DOM.addCafeForm.addEventListener('submit', handleAddCafe);
+  if (DOM.addMovieForm) DOM.addMovieForm.addEventListener('submit', handleAddMovie);
+
+  // Plan tab: thank you popup settings
+  if (DOM.planThankyouForm) {
+    DOM.planThankyouForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      savePlanThankyouSettings();
+    });
+  }
+  if (DOM.resetPlanThankyou) {
+    DOM.resetPlanThankyou.addEventListener('click', () => {
+      localStorage.removeItem('tnag_plan_thankyou');
+      loadPlanThankyouSettings();
+      showAdminToast('Đã khôi phục popup cảm ơn về mặc định!');
+    });
+  }
+
+  // Plan tab: submitted plans
+  if (DOM.planRefreshBtn) DOM.planRefreshBtn.addEventListener('click', renderPlanTable);
+  if (DOM.planClearBtn) {
+    DOM.planClearBtn.addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn xóa tất cả kế hoạch đã chốt? Thao tác này không thể hoàn tác.')) {
+        localStorage.removeItem('tnag_plans');
+        renderPlanTable();
+        renderPlanStats();
+        showAdminToast('Đã xóa tất cả kế hoạch!');
+      }
     });
   }
 }

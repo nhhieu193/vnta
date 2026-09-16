@@ -380,6 +380,10 @@
             </a>
           </div>
 
+          <button type="button" class="modal-btn btn-add-plan" id="btn-add-plan">
+            <span>📅</span> Chốt món này — Thêm vào kế hoạch
+          </button>
+
           <div class="action-row-primary">
             <button type="button" class="modal-btn btn-share" id="btn-share">
               <span>🔗</span> Chia sẻ món này
@@ -389,6 +393,80 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PLAN MODAL (KẾ HOẠCH) ================= -->
+  <div class="modal-backdrop" id="plan-modal" role="dialog" aria-modal="true" aria-labelledby="plan-dish-name">
+    <div class="result-dialog" id="plan-dialog">
+      <div class="modal-header-banner">
+        <span class="modal-header-badge">📅 KẾ HOẠCH CỦA BẠN</span>
+        <button type="button" class="close-modal-btn" id="plan-modal-close-btn" aria-label="Đóng">&times;</button>
+      </div>
+
+      <div class="modal-content-body">
+        <div class="plan-selected-dish">
+          <span class="plan-selected-emoji" id="plan-dish-emoji">🍲</span>
+          <div>
+            <p class="plan-selected-label">Món đã chốt</p>
+            <p class="plan-selected-name" id="plan-dish-name">Tên món</p>
+          </div>
+        </div>
+
+        <div class="plan-field-row">
+          <div class="plan-field-group">
+            <label for="plan-date">📆 Ngày</label>
+            <input type="date" id="plan-date" />
+          </div>
+          <div class="plan-field-group">
+            <label for="plan-time">⏰ Giờ</label>
+            <input type="time" id="plan-time" />
+          </div>
+        </div>
+
+        <div class="plan-field-group">
+          <label>🎯 Đi đâu tiếp theo? <span class="label-hint">(không bắt buộc)</span></label>
+          <div class="plan-activity-chips" id="plan-activity-chips">
+            <button type="button" class="plan-chip" data-activity="cafe">☕ Cà phê</button>
+            <button type="button" class="plan-chip" data-activity="movie">🎬 Xem phim</button>
+            <button type="button" class="plan-chip" data-activity="walk">🚶 Dạo phố</button>
+          </div>
+        </div>
+
+        <div class="plan-activity-detail" id="plan-cafe-detail" style="display:none;">
+          <a href="https://www.google.com/maps/search/?api=1&query=qu%C3%A1n%20c%C3%A0%20ph%C3%AA%20%C4%91%E1%BA%B9p" target="_blank" rel="noopener noreferrer" class="modal-btn btn-gmaps" id="plan-cafe-gmaps-btn">
+            <span>🔍</span> Tìm "quán cà phê đẹp" trên Google Maps
+          </a>
+          <p class="plan-detail-hint" id="plan-cafe-hint">Hoặc chọn nhanh từ gợi ý bên dưới:</p>
+          <div class="plan-suggestion-list" id="plan-cafe-list"></div>
+        </div>
+
+        <div class="plan-activity-detail" id="plan-movie-detail" style="display:none;">
+          <p class="plan-detail-hint" id="plan-movie-hint">Phim gợi ý:</p>
+          <div class="plan-suggestion-list" id="plan-movie-list"></div>
+        </div>
+
+        <div class="plan-field-group">
+          <label for="plan-note">📝 Ghi chú thêm <span class="label-hint">(không bắt buộc)</span></label>
+          <textarea id="plan-note" rows="2" placeholder="VD: Hẹn ở cổng công ty lúc 12h..."></textarea>
+        </div>
+
+        <button type="button" class="modal-btn btn-confirm-plan" id="btn-confirm-plan">
+          <span>🎉</span> Chốt kế hoạch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PLAN THANK YOU MODAL ================= -->
+  <div class="modal-backdrop" id="plan-thankyou-modal" role="dialog" aria-modal="true" aria-labelledby="plan-thankyou-title">
+    <div class="result-dialog plan-thankyou-dialog">
+      <div class="modal-content-body plan-thankyou-body">
+        <div class="plan-thankyou-icon">🎉</div>
+        <h3 class="plan-thankyou-title" id="plan-thankyou-title">Cảm ơn bạn!</h3>
+        <p class="plan-thankyou-message" id="plan-thankyou-message">Kế hoạch của bạn đã được ghi nhận.</p>
+        <button type="button" class="modal-btn btn-spin-again" id="plan-thankyou-close-btn">Đóng</button>
       </div>
     </div>
   </div>

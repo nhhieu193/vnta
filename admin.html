@@ -41,6 +41,10 @@
         <span class="nav-icon">🎨</span>
         <span>Cài Đặt Giao Diện</span>
       </button>
+      <button type="button" class="nav-item" id="nav-plan" data-tab="plan">
+        <span class="nav-icon">📅</span>
+        <span>Kế Hoạch</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -335,6 +339,123 @@
             <button type="button" class="reset-settings-btn" id="reset-uisettings">🔄 Khôi phục mặc định</button>
           </div>
         </form>
+      </div>
+    </section>
+
+    <!-- TAB 6: KẾ HOẠCH -->
+    <section class="tab-content" id="tab-plan">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="plan-stats-grid">
+        <!-- Populated by admin.js -->
+      </div>
+
+      <div class="popup-settings-grid">
+        <!-- Cafe list -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>☕ Danh sách quán Cà Phê gợi ý</h3>
+          </div>
+          <p class="panel-desc">Hiện cho người dùng chọn nhanh khi họ chọn "Cà phê" trong Kế hoạch.</p>
+          <form class="user-form" id="add-cafe-form" autocomplete="off">
+            <div class="user-form-grid">
+              <div class="form-group">
+                <label for="new-cafe-name">Tên quán <span class="required-star">*</span></label>
+                <input type="text" id="new-cafe-name" placeholder="VD: The Coffee House" required />
+              </div>
+              <div class="form-group">
+                <label for="new-cafe-note">Ghi chú (địa chỉ, mô tả...)</label>
+                <input type="text" id="new-cafe-note" placeholder="VD: 12 Nguyễn Huệ, Q.1" />
+              </div>
+              <div class="form-group form-btn-group">
+                <button type="submit" class="save-btn add-user-btn">
+                  <span>➕ Thêm quán</span>
+                </button>
+              </div>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table class="data-table" id="cafe-table">
+              <thead>
+                <tr><th>#</th><th>Tên quán</th><th>Ghi chú</th><th>Thao tác</th></tr>
+              </thead>
+              <tbody id="cafe-table-body"><!-- Populated by admin.js --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Movie list -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>🎬 Danh sách Phim gợi ý</h3>
+          </div>
+          <p class="panel-desc">Hiện cho người dùng chọn nhanh khi họ chọn "Xem phim" trong Kế hoạch.</p>
+          <form class="user-form" id="add-movie-form" autocomplete="off">
+            <div class="user-form-grid">
+              <div class="form-group">
+                <label for="new-movie-name">Tên phim <span class="required-star">*</span></label>
+                <input type="text" id="new-movie-name" placeholder="VD: Mai" required />
+              </div>
+              <div class="form-group">
+                <label for="new-movie-note">Ghi chú (rạp, suất chiếu...)</label>
+                <input type="text" id="new-movie-note" placeholder="VD: CGV Vincom, suất 13h30" />
+              </div>
+              <div class="form-group form-btn-group">
+                <button type="submit" class="save-btn add-user-btn">
+                  <span>➕ Thêm phim</span>
+                </button>
+              </div>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table class="data-table" id="movie-table">
+              <thead>
+                <tr><th>#</th><th>Tên phim</th><th>Ghi chú</th><th>Thao tác</th></tr>
+              </thead>
+              <tbody id="movie-table-body"><!-- Populated by admin.js --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thank you popup settings -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>🎉 Popup cảm ơn sau khi chốt kế hoạch</h3>
+        </div>
+        <p class="panel-desc">Nội dung hiện ra sau khi người dùng bấm "Chốt kế hoạch".</p>
+        <form class="settings-form" id="plan-thankyou-form">
+          <div class="form-group">
+            <label for="plan-thankyou-title-input">Tiêu đề</label>
+            <input type="text" id="plan-thankyou-title-input" placeholder="VD: Cảm ơn bạn!" />
+          </div>
+          <div class="form-group">
+            <label for="plan-thankyou-message-input">Nội dung</label>
+            <textarea id="plan-thankyou-message-input" rows="3" placeholder="VD: Kế hoạch của bạn đã được ghi nhận..."></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="save-btn">💾 Lưu cài đặt</button>
+            <button type="button" class="reset-settings-btn" id="reset-plan-thankyou">🔄 Khôi phục mặc định</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Submitted plans -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>📋 Kế hoạch người dùng đã chốt</h3>
+          <div class="panel-actions">
+            <button type="button" class="action-btn refresh-btn" id="plan-refresh-btn">🔄 Làm mới</button>
+            <button type="button" class="action-btn danger-btn" id="plan-clear-btn">🗑️ Xóa tất cả</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="plan-table">
+            <thead>
+              <tr><th>#</th><th>Thời gian</th><th>Món</th><th>Ngày hẹn</th><th>Hoạt động tiếp theo</th><th>Ghi chú</th><th>User</th></tr>
+            </thead>
+            <tbody id="plan-table-body"><!-- Populated by admin.js --></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
