@@ -667,6 +667,45 @@ function updatePreview() {
   } else {
     DOM.previewExtra.style.display = 'none';
   }
+
+  resetPreviewDemo();
+}
+
+// ==========================================
+// PREVIEW POPUP: demo bấm "Có"/"Không" y hệt hành vi trang thật
+// ==========================================
+const PREVIEW_DEFAULT_QUESTIONS = [
+  '😢 Sao lại chọn Không? Bạn không thích đồ ăn ngon sao?',
+  '🥺 Một lần nữa thôi... Cho mình cơ hội nhé?',
+  '😭 Bạn chắc chắn không muốn thử? Đồ ăn ở đây ngon lắm!',
+  '💔 Nút "Có" đã rất to rồi... hãy bấm nó đi!'
+];
+
+let previewNoClickCount = 0;
+
+function resetPreviewDemo() {
+  previewNoClickCount = 0;
+  DOM.previewBtnYes.className = 'preview-btn preview-btn-yes';
+  DOM.previewBtnNo.className = 'preview-btn preview-btn-no';
+}
+
+function handlePreviewNoClick() {
+  previewNoClickCount++;
+  const growLevel = Math.min(previewNoClickCount, 4);
+  DOM.previewBtnYes.className = 'preview-btn preview-btn-yes grow-' + growLevel;
+  DOM.previewBtnNo.className = 'preview-btn preview-btn-no shrink-' + growLevel;
+
+  const questions = DOM.popupNoQuestions.value.split('\n').map(q => q.trim()).filter(q => q.length > 0);
+  const list = questions.length > 0 ? questions : PREVIEW_DEFAULT_QUESTIONS;
+  const qIndex = Math.min(previewNoClickCount - 1, list.length - 1);
+
+  DOM.previewExtra.style.display = 'block';
+  DOM.previewQuestion.textContent = list[qIndex];
+}
+
+function handlePreviewYesClick() {
+  showAdminToast('Demo: đây là lúc popup thật sự đóng lại và vào trang chính.');
+  updatePreview();
 }
 
 // ==========================================
@@ -1032,6 +1071,10 @@ function setupEvents() {
   [DOM.popupTitle, DOM.popupMessage, DOM.popupYesText, DOM.popupNoText, DOM.popupNoQuestions].forEach(el => {
     if (el) el.addEventListener('input', updatePreview);
   });
+
+  // Popup settings: demo bấm thử "Có"/"Không" trong khung xem trước
+  if (DOM.previewBtnNo) DOM.previewBtnNo.addEventListener('click', handlePreviewNoClick);
+  if (DOM.previewBtnYes) DOM.previewBtnYes.addEventListener('click', handlePreviewYesClick);
 
   // Popup settings: reset
   if (DOM.resetPopupSettings) {

@@ -754,17 +754,45 @@ body {
   border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .preview-btn-yes {
   background: linear-gradient(135deg, #fc8019, #ff5200);
   color: #fff;
 }
+.preview-btn-yes:hover {
+  filter: brightness(1.1);
+}
 
 .preview-btn-no {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.preview-btn-no:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Demo tương tác: "Có" phình to, "Không" teo nhỏ dần theo số lần bấm Không */
+.preview-btn-yes.grow-1 { font-size: 1.02rem; padding: 12px 26px; box-shadow: 0 6px 18px rgba(252, 128, 25, 0.5); }
+.preview-btn-yes.grow-2 { font-size: 1.14rem; padding: 14px 30px; box-shadow: 0 8px 22px rgba(252, 128, 25, 0.6); }
+.preview-btn-yes.grow-3 { font-size: 1.28rem; padding: 16px 34px; box-shadow: 0 10px 26px rgba(252, 128, 25, 0.7); }
+.preview-btn-yes.grow-4 { font-size: 1.4rem; padding: 18px 38px; box-shadow: 0 12px 30px rgba(252, 128, 25, 0.8); }
+
+.preview-btn-no.shrink-1 { font-size: 0.8rem; padding: 8px 16px; opacity: 0.75; }
+.preview-btn-no.shrink-2 { font-size: 0.72rem; padding: 7px 13px; opacity: 0.55; }
+.preview-btn-no.shrink-3 { font-size: 0.66rem; padding: 6px 11px; opacity: 0.4; }
+.preview-btn-no.shrink-4 { font-size: 0.6rem; padding: 5px 9px; opacity: 0.3; }
+
+.preview-demo-hint {
+  margin-top: 14px;
+  font-size: 0.72rem;
+  color: var(--admin-text-dim);
+  font-style: italic;
 }
 
 /* =========================================================
