@@ -2757,7 +2757,8 @@ body {
   }
 
   .action-row-primary,
-  .decision-btn-row {
+  .decision-btn-row,
+  .plan-field-row {
     grid-template-columns: 1fr;
   }
 
