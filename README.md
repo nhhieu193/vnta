@@ -51,27 +51,54 @@ Nên đặt Nginx/Caddy làm reverse proxy phía trước (trỏ domain vào c�
 
 Chỉ cần sao lưu định kỳ file `db/app.db` (và `db/app.db-wal`, `db/app.db-shm` nếu có).
 
-## Deploy: Frontend trên GitHub Pages (free) + Dữ liệu trên VPS
+## Deploy: Frontend GitHub Pages + Domain HTTPS free từ Render + Data trên VPS
 
-Có thể tách đôi: người dùng vào bằng link GitHub Pages miễn phí
-(`https://<username>.github.io/<repo>/`), còn dữ liệu vẫn lưu ở SQLite trên VPS của bạn.
+Kiến trúc 3 phần, tất cả free trừ VPS bạn đã có sẵn:
 
-1. **Trên VPS**: chạy `server.js` như hướng dẫn ở trên, đặt phía sau Nginx/Caddy với domain
-   riêng và **bắt buộc bật HTTPS** (Let's Encrypt) — GitHub Pages luôn chạy HTTPS nên trình
-   duyệt sẽ chặn gọi API qua HTTP (mixed content).
-   Giới hạn domain được phép gọi API bằng biến môi trường, ví dụ:
-   ```bash
-   ALLOWED_ORIGINS="https://<username>.github.io" pm2 start server.js --name trua-nay-an-gi
-   ```
-2. **Sửa `config.js`** trong repo, trỏ về domain API vừa cấu hình:
-   ```js
-   window.TNAG_API_BASE = 'https://api.miendomain.com';
-   ```
-3. **Push code lên GitHub**, vào Settings → Pages, chọn nhánh/thư mục chứa `index.html` làm
-   nguồn build. GitHub sẽ cấp link dạng `https://<username>.github.io/<repo>/`.
-4. Người dùng vào bằng link GitHub Pages đó; `hydrate.js` sẽ tự gọi API trên VPS để đọc/ghi
-   dữ liệu, nên log/user/cài đặt vẫn dùng chung một SQLite thay vì mỗi người một bản riêng.
+```
+Trình duyệt --HTTPS--> GitHub Pages (frontend tĩnh)
+Trình duyệt --HTTPS--> Render (chỉ để có domain + SSL free) --HTTP nội bộ--> VPS (server.js + SQLite)
+```
 
-Lưu ý: GitHub Pages chỉ host được file tĩnh (HTML/CSS/JS) — không thể tự chạy `server.js`
-hay SQLite trên đó, nên phần API bắt buộc phải chạy ở nơi có server thật (VPS) như trên.
+GitHub Pages luôn chạy HTTPS nên trình duyệt sẽ chặn gọi thẳng tới VPS nếu VPS chỉ có
+IP/HTTP. Thay vì tự cấu hình domain + SSL cho VPS, dùng Render làm lớp trung gian: Render
+cấp sẵn domain `https://<tên-app>.onrender.com` có SSL miễn phí, chỉ việc forward request
+sang VPS. Code phần proxy này nằm ở thư mục [`render-proxy/`](render-proxy/server.js).
+
+**1. Chạy server chính trên VPS** (dữ liệu lưu ở đây):
+```bash
+npm install
+ALLOWED_ORIGINS="https://<username>.github.io" pm2 start server.js --name trua-nay-an-gi
+pm2 save && pm2 startup
+```
+Mở port server đang chạy (mặc định 3000) trên firewall VPS để Render gọi vào được.
+
+**2. Deploy `render-proxy/` lên Render**:
+- Trên Render Dashboard: **New +** → **Web Service** → chọn repo `nhhieu193/vnta`.
+- **Root Directory**: `render-proxy`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Environment Variable**: `VPS_ORIGIN` = `http://<ip-vps>:3000` (đổi cổng nếu khác)
+- Deploy xong Render cấp domain dạng `https://vnta-proxy.onrender.com`.
+- Lưu ý gói Render free sẽ "ngủ" sau ~15 phút không có request, lần gọi đầu tiên sau đó
+  chậm khoảng 30–50 giây để khởi động lại — người dùng đầu tiên trong ngày có thể phải chờ.
+
+**3. Trỏ frontend về domain Render**, sửa [`config.js`](config.js):
+```js
+window.TNAG_API_BASE = 'https://vnta-proxy.onrender.com';
+```
+
+**4. Push code lên GitHub và bật Pages**:
+```bash
+git add .
+git commit -m "feat: thêm backend SQLite + proxy Render cho GitHub Pages"
+git push -u origin main
+```
+Vào repo → **Settings → Pages** → Source: **Deploy from a branch** → Branch: `main`, folder `/ (root)`.
+GitHub cấp link `https://nhhieu193.github.io/vnta/` — đây là link người dùng sẽ vào.
+
+Người dùng vào bằng link GitHub Pages đó; `hydrate.js` sẽ gọi API qua domain Render, Render
+forward vào VPS, dữ liệu (log/user/cài đặt) lưu chung một file SQLite trên VPS thay vì mỗi
+người một bản `localStorage` riêng.
+# vnta
 # vnta
