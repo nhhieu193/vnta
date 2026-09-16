@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Trưa Nay Ăn Gì</title>
+  <meta name="description" content="Bảng điều khiển admin cho ứng dụng Trưa Nay Ăn Gì" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E%3Ctext y=%2226%22 font-size=%2226%22%3E⚙️%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ================= ADMIN SIDEBAR ================= -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">🍲</span>
+      <div>
+        <h1 class="sidebar-title">Admin Panel</h1>
+        <p class="sidebar-subtitle">Trưa Nay Ăn Gì</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button type="button" class="nav-item active" id="nav-food" data-tab="food">
+        <span class="nav-icon">🍲</span>
+        <span>Kho Đồ Ăn</span>
+      </button>
+      <button type="button" class="nav-item" id="nav-tracking" data-tab="tracking">
+        <span class="nav-icon">📊</span>
+        <span>Hành Động User</span>
+      </button>
+      <button type="button" class="nav-item" id="nav-users" data-tab="users">
+        <span class="nav-icon">👥</span>
+        <span>Quản Lý User</span>
+      </button>
+      <button type="button" class="nav-item" id="nav-popup" data-tab="popup">
+        <span class="nav-icon">⚙️</span>
+        <span>Cài Đặt Popup</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-logout-btn" id="admin-logout-btn">
+        <span>🚪 Đăng xuất</span>
+      </button>
+      <a href="index.html" class="sidebar-back-btn">
+        <span>← Về trang chính</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="admin-main">
+
+    <!-- HEADER -->
+    <header class="admin-header">
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+      <h2 class="header-title" id="header-title">🍲 Kho Đồ Ăn</h2>
+      <div class="header-right">
+        <span class="user-greeting" id="admin-user-greeting">Xin chào, <strong>admin</strong></span>
+        <span class="admin-badge">Admin</span>
+      </div>
+    </header>
+
+    <!-- TAB 1: KHO ĐỒ ĂN -->
+    <section class="tab-content active" id="tab-food">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="food-stats-grid">
+        <!-- Populated by admin.js -->
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Danh sách món ăn</h3>
+          <div class="search-wrap">
+            <span>🔍</span>
+            <input type="text" id="food-search" placeholder="Tìm tên món, xuất xứ..." />
+          </div>
+        </div>
+        <div class="filter-chips" id="food-filter-chips">
+          <button type="button" class="chip active" data-cat="all">Tất cả</button>
+          <button type="button" class="chip" data-cat="main">🍲 Món chính</button>
+          <button type="button" class="chip" data-cat="drink">☕ Đồ uống</button>
+          <button type="button" class="chip" data-cat="snack">🍟 Ăn vặt</button>
+          <button type="button" class="chip" data-cat="pub">🍻 Món nhậu</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="food-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Emoji</th>
+                <th>Tên món</th>
+                <th>Danh mục</th>
+                <th>Giá</th>
+                <th>Rarity</th>
+                <th>Xuất xứ</th>
+                <th>Chay</th>
+              </tr>
+            </thead>
+            <tbody id="food-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: HÀNH ĐỘNG USER -->
+    <section class="tab-content" id="tab-tracking">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="tracking-stats-grid">
+        <!-- Populated by admin.js -->
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Log hành động người dùng</h3>
+          <div class="panel-actions">
+            <button type="button" class="action-btn refresh-btn" id="tracking-refresh-btn">🔄 Làm mới</button>
+            <button type="button" class="action-btn danger-btn" id="tracking-clear-btn">🗑️ Xóa tất cả log</button>
+          </div>
+        </div>
+
+        <!-- Action type legend -->
+        <div class="action-legend" id="action-legend">
+          <!-- Populated by admin.js -->
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="tracking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Thời gian</th>
+                <th>Hành động</th>
+                <th>Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="tracking-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: QUẢN LÝ USER -->
+    <section class="tab-content" id="tab-users">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="users-stats-grid">
+        <!-- Populated by admin.js -->
+      </div>
+
+      <!-- Add User Panel -->
+      <div class="panel add-user-panel">
+        <div class="panel-header">
+          <h3>➕ Thêm Tài Khoản Mới</h3>
+        </div>
+        <form class="user-form" id="add-user-form" autocomplete="off">
+          <div class="user-form-grid">
+            <div class="form-group">
+              <label for="new-username">Tên đăng nhập <span class="required-star">*</span></label>
+              <input type="text" id="new-username" placeholder="VD: nhanvien1" required />
+            </div>
+            <div class="form-group">
+              <label for="new-password">Mật khẩu <span class="required-star">*</span></label>
+              <div class="input-with-action">
+                <input type="password" id="new-password" placeholder="VD: 123456" required />
+                <button type="button" class="btn-toggle-eye" id="toggle-new-pwd-btn" title="Hiện/ẩn mật khẩu">👁️</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="new-role">Vai trò</label>
+              <select id="new-role">
+                <option value="user">👤 Người dùng (User)</option>
+                <option value="admin">🛡️ Quản trị viên (Admin)</option>
+              </select>
+            </div>
+            <div class="form-group form-btn-group">
+              <button type="submit" class="save-btn add-user-btn" id="add-user-submit-btn">
+                <span>➕ Thêm User</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- User List Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>👥 Danh sách tài khoản người dùng</h3>
+          <div class="search-wrap">
+            <span>🔍</span>
+            <input type="text" id="users-search" placeholder="Tìm theo tên đăng nhập, vai trò..." />
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="users-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tài khoản</th>
+                <th>Mật khẩu</th>
+                <th>Vai trò</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: CÀI ĐẶT POPUP -->
+    <section class="tab-content" id="tab-popup">
+      <div class="popup-settings-grid">
+
+        <!-- Left: Settings Form -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>⚙️ Nội dung Consent Popup</h3>
+          </div>
+          <p class="panel-desc">Cài đặt nội dung popup hiện ra khi user đăng nhập. User phải chọn "Có" để vào trang.</p>
+
+          <form class="settings-form" id="popup-settings-form">
+            <div class="form-group">
+              <label for="popup-title">Tiêu đề popup</label>
+              <input type="text" id="popup-title" placeholder="VD: Chào mừng bạn đến!" />
+            </div>
+
+            <div class="form-group">
+              <label for="popup-message">Nội dung chính</label>
+              <textarea id="popup-message" rows="3" placeholder="VD: Bạn có muốn khám phá thực đơn hôm nay không?"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="popup-yes-text">Text nút "Có"</label>
+                <input type="text" id="popup-yes-text" placeholder="Có" />
+              </div>
+              <div class="form-group">
+                <label for="popup-no-text">Text nút "Không"</label>
+                <input type="text" id="popup-no-text" placeholder="Không" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Câu hỏi khi user chọn "Không" <span class="label-hint">(mỗi dòng = 1 câu hỏi, hiện theo thứ tự lần bấm)</span></label>
+              <textarea id="popup-no-questions" rows="5" placeholder="Dòng 1: Câu hỏi cho lần bấm Không thứ 1&#10;Dòng 2: Câu hỏi cho lần bấm Không thứ 2&#10;Dòng 3: Câu hỏi cho lần bấm Không thứ 3&#10;Dòng 4: Câu hỏi cho lần bấm Không thứ 4"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="save-btn">💾 Lưu cài đặt</button>
+              <button type="button" class="reset-settings-btn" id="reset-popup-settings">🔄 Khôi phục mặc định</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right: Live Preview -->
+        <div class="panel preview-panel">
+          <div class="panel-header">
+            <h3>👁️ Xem trước Popup</h3>
+          </div>
+          <div class="preview-container" id="popup-preview">
+            <div class="preview-popup">
+              <div class="preview-icon">🍲</div>
+              <h3 class="preview-title" id="preview-title">Tiêu đề popup</h3>
+              <p class="preview-message" id="preview-message">Nội dung popup sẽ hiện ở đây...</p>
+              <div class="preview-extra" id="preview-extra" style="display:none;">
+                <p class="preview-question" id="preview-question">Câu hỏi khi chọn "Không"</p>
+              </div>
+              <div class="preview-btn-row">
+                <span class="preview-btn preview-btn-yes" id="preview-btn-yes">Có</span>
+                <span class="preview-btn preview-btn-no" id="preview-btn-no">Không</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div class="admin-toast" id="admin-toast"></div>
+
+  </main>
+
+  <script src="data/dishes.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

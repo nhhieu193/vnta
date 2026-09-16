@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Trưa Nay Ăn Gì? — Swiggy Food Wheel & Quẻ Trưa</title>
+  <meta name="description" content="Chưa biết trưa nay ăn gì? Xoay vòng chọn món theo ngân sách phong cách Swiggy, hoặc Lắc Quẻ Trưa cầu may mắn. Dùng miễn phí, giao đồ ăn nhanh chóng!" />
+  <meta property="og:title" content="Trưa Nay Ăn Gì? — Swiggy Food Spin & Quẻ Trưa" />
+  <meta property="og:description" content="Quay chọn món theo ngân sách hoặc xin quẻ trưa truyền thống. Giao diện Swiggy chuẩn app giao đồ ăn!" />
+  <meta property="og:type" content="website" />
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E%3Ctext y=%2226%22 font-size=%2226%22%3E🍲%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="theme-ket-hoi-tho-lun">
+
+  <!-- ================= LOGIN SCREEN OVERLAY ================= -->
+  <div class="login-overlay" id="login-overlay">
+    <!-- Animated food icons orbiting around the login card -->
+    <div class="login-food-orbit" id="login-food-orbit">
+      <span class="orbit-food" style="--i:0">🍜</span>
+      <span class="orbit-food" style="--i:1">🍕</span>
+      <span class="orbit-food" style="--i:2">🍔</span>
+      <span class="orbit-food" style="--i:3">🍣</span>
+      <span class="orbit-food" style="--i:4">🧋</span>
+      <span class="orbit-food" style="--i:5">🍟</span>
+      <span class="orbit-food" style="--i:6">🍝</span>
+      <span class="orbit-food" style="--i:7">🍩</span>
+      <span class="orbit-food" style="--i:8">🥗</span>
+      <span class="orbit-food" style="--i:9">🍲</span>
+      <span class="orbit-food" style="--i:10">🥤</span>
+      <span class="orbit-food" style="--i:11">🍰</span>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-card" id="login-card">
+      <div class="login-logo-wrap">
+        <div class="login-logo-circle">🍲</div>
+        <h2 class="login-title"></h2>
+        <p class="login-subtitle"></p>
+      </div>
+
+      <form class="login-form" id="login-form" autocomplete="off">
+        <div class="login-input-group">
+          <span class="login-input-icon">👤</span>
+          <input type="text" class="login-input" id="login-username" placeholder="Tên đăng nhập" required />
+        </div>
+
+        <div class="login-input-group">
+          <span class="login-input-icon">🔒</span>
+          <input type="password" class="login-input" id="login-password" placeholder="Mật khẩu" required />
+        </div>
+
+        <div class="login-error-msg" id="login-error-msg" style="display: none;"></div>
+
+        <button type="submit" class="login-submit-btn" id="login-submit-btn">
+          <span>Đăng nhập</span>
+          <span class="login-btn-arrow">→</span>
+        </button>
+      </form>
+
+      <div class="login-footer-text">
+        <p></p>
+      </div>
+    </div>
+
+    <!-- Heart icons at bottom corners -->
+    <div class="login-heart login-heart-left">💖</div>
+    <div class="login-heart login-heart-right">💖</div>
+  </div>
+
+  <!-- ================= CONSENT POPUP OVERLAY ================= -->
+  <div class="consent-overlay" id="consent-overlay" style="display:none;">
+    <div class="consent-card" id="consent-card">
+      <div class="consent-icon">🍲</div>
+      <h2 class="consent-title" id="consent-title"></h2>
+      <p class="consent-message" id="consent-message"></p>
+
+      <div class="consent-extra-content" id="consent-extra-content" style="display:none;">
+        <p class="consent-question" id="consent-question"></p>
+      </div>
+
+      <div class="consent-btn-row">
+        <button type="button" class="consent-btn consent-btn-yes" id="consent-btn-yes">
+          <span id="consent-yes-text">Có</span>
+        </button>
+        <button type="button" class="consent-btn consent-btn-no" id="consent-btn-no">
+          <span id="consent-no-text">Không</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SWIGGY HEADER ================= -->
+  <header class="site-header">
+    <a href="#" class="brand-wrapper" id="brand-link" aria-label="Trưa Nay Ăn Gì">
+      <div class="swiggy-logo-badge" id="brand-icon">🍲</div>
+      <div class="brand-titles">
+        <h1 id="brand-title"></h1>
+        <div class="brand-location">
+          <span></span> <strong></strong> <span></span>
+        </div>
+      </div>
+    </a>
+
+    <div class="header-right">
+      <button type="button" class="sound-toggle-btn" id="sound-toggle-btn" aria-label="Bật/Tắt âm thanh" title="Âm thanh vòng quay & ống quẻ">
+        <span id="sound-icon">🔊</span>
+        <span id="sound-text">Bật</span>
+      </button>
+
+      <a href="#catalog-section" class="global-stats-btn" title="Xem thực đơn món ăn">
+        <span>📖</span>
+        <span class="catalog-btn-text">Thực đơn</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= THEME TOOLBAR (Swiggy Segmented Control) ================= -->
+  <section class="theme-selector-bar" aria-label="Chọn chế độ quay">
+    <div class="theme-pill-group" role="tablist">
+      <button type="button" class="theme-btn active" id="btn-theme-ket" data-theme="ket-hoi-tho-lun" role="tab" aria-selected="true">
+        <span>🎯</span>
+        <span>Vòng quay chọn món</span>
+      </button>
+      <button type="button" class="theme-btn" id="btn-theme-que" data-theme="que-trua" role="tab" aria-selected="false">
+        <span>🎋</span>
+        <span>Quẻ trưa may mắn</span>
+      </button>
+    </div>
+
+    <div class="live-counter-badge" id="live-counter">
+      <span id="counter-label"></span>: <strong id="counter-value"></strong>
+    </div>
+  </section>
+
+  <!-- ================= BANNER ================= -->
+  <section class="mode-banner" id="mode-banner">
+    <span class="mode-badge" id="banner-badge"></span>
+    <h2 class="mode-title" id="banner-title">Hôm nay ăn gì?</h2>
+    <p class="mode-subtitle" id="banner-subtitle">Xoay vòng tròn tự chọn món ăn ngẫu nhiên hoặc lắc quẻ trưa thư giãn!</p>
+  </section>
+
+  <!-- ================= MAIN ARENA 1: VÒNG QUAY TRÒN TỰ CHỌN MÓN ================= -->
+  <section class="mode-container active" id="arena-ket" aria-label="Vòng quay chọn món">
+    <div class="wheel-arena-wrapper">
+      <!-- Circular Wheel Stage -->
+      <div class="wheel-stage">
+        <div class="circular-wheel-frame">
+          <div class="wheel-pointer" id="wheel-pointer"></div>
+          <canvas id="wheel-canvas" width="460" height="460"></canvas>
+          <div class="wheel-center-hub" id="wheel-center-hub" title="Bấm để quay">
+            <span>QUAY</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Dishes Manager Panel -->
+      <div class="dish-manager-panel">
+        <div class="manager-header">
+          <div class="manager-title-row">
+            <span class="manager-title">🎯 Món trên vòng quay</span>
+            <span class="wheel-count-badge" id="wheel-count-badge">8 món</span>
+          </div>
+          <p class="manager-subtitle">Thêm, bớt hoặc tùy chỉnh danh sách món ăn trước khi xoay.</p>
+        </div>
+
+        <!-- Add Custom Dish Form -->
+        <form class="add-dish-form" id="add-dish-form">
+          <input type="text" class="add-dish-input" id="add-dish-input" placeholder="Nhập tên món mới (vd: Bún đậu, Cơm gà...)" autocomplete="off" />
+          <button type="submit" class="btn-add-dish" id="btn-add-dish">+ Thêm món</button>
+        </form>
+
+        <!-- Quick Presets Row -->
+        <div class="manager-quick-actions">
+          <button type="button" class="quick-act-btn" id="btn-quick-random">🎲 Ngẫu nhiên 8 món</button>
+          <button type="button" class="quick-act-btn" id="btn-quick-filter">⚡ Lấy từ bộ lọc</button>
+          <button type="button" class="quick-act-btn" id="btn-quick-reset">🔄 Khôi phục gốc</button>
+        </div>
+
+        <!-- Selected Dishes Tags / Chips -->
+        <div class="wheel-chips-container" id="wheel-chips-container">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN ARENA 2: QUẺ TRƯA (TRẢI QUẺ -> THU HỘP -> LẮC & RỚT 1 QUẺ) ================= -->
+  <section class="mode-container" id="arena-que" aria-label="Quẻ Trưa">
+    <div class="que-arena">
+      <div class="que-altar-canvas">
+        <div class="que-steps-guide">
+          <span class="step-badge active" id="que-step-1">01 Trải 5 quẻ</span>
+          <span class="step-badge" id="que-step-2">02 Thu vào hộp</span>
+          <span class="step-badge" id="que-step-3">03 Lắc & Rớt 1 quẻ</span>
+        </div>
+
+        <div class="que-ceremony-stage" id="que-ceremony-stage">
+          <!-- Giai đoạn 1: 5 Quẻ che tên trải xòe nan quạt trên bàn -->
+          <div class="fanned-sticks-group" id="fanned-sticks-group">
+            <div class="mystery-stick stick-pos-0" data-index="0">
+              <div class="stick-pattern">🌸</div>
+              <div class="stick-seal">BÍ MẬT</div>
+              <div class="stick-ornament">◈</div>
+            </div>
+            <div class="mystery-stick stick-pos-1" data-index="1">
+              <div class="stick-pattern">🍀</div>
+              <div class="stick-seal">BÍ MẬT</div>
+              <div class="stick-ornament">◈</div>
+            </div>
+            <div class="mystery-stick stick-pos-2" data-index="2">
+              <div class="stick-pattern">✨</div>
+              <div class="stick-seal">BÍ MẬT</div>
+              <div class="stick-ornament">◈</div>
+            </div>
+            <div class="mystery-stick stick-pos-3" data-index="3">
+              <div class="stick-pattern">🏮</div>
+              <div class="stick-seal">BÍ MẬT</div>
+              <div class="stick-ornament">◈</div>
+            </div>
+            <div class="mystery-stick stick-pos-4" data-index="4">
+              <div class="stick-pattern">🧧</div>
+              <div class="stick-seal">BÍ MẬT</div>
+              <div class="stick-ornament">◈</div>
+            </div>
+          </div>
+
+          <!-- Giai đoạn 2 & 3: Hộp Quẻ Tre đặt ở trung tâm -->
+          <div class="bamboo-cylinder-wrap" id="bamboo-cylinder-wrap">
+            <div class="bamboo-cylinder" id="bamboo-cylinder">
+              <div class="bamboo-rings top"></div>
+              <div class="bamboo-label">HỘP QUẺ</div>
+              <div class="bamboo-rings bottom"></div>
+            </div>
+          </div>
+
+          <!-- Giai đoạn 4: 1 Quẻ duy nhất lắc và rớt ra ngoài hộp -->
+          <div class="fallen-stick-wrapper" id="fallen-stick-wrapper">
+            <div class="winning-fallen-stick" id="winning-fallen-stick">
+              <div class="fallen-stick-head" id="fallen-stick-head">THƯỢNG CÁT</div>
+              <div class="fallen-stick-body">
+                <span class="fallen-stick-text" id="fallen-stick-text">AN NHIÊN</span>
+              </div>
+              <div class="fallen-stick-tail">◈ ◈ ◈</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="altar-tea-pot" title="Bàn trà thanh tịnh">🍵 🪷</div>
+        <p class="que-instruction" id="que-instruction">Bấm "XIN MỘT QUẺ" để trải 5 quẻ bí mật lên bàn!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTROLS SECTION ================= -->
+  <section class="controls-section" aria-label="Bộ điều khiển chọn món">
+    <div class="filter-row">
+      <!-- Category Tabs -->
+      <div class="category-tabs" role="group" aria-label="Danh mục món">
+        <button type="button" class="cat-btn active" data-category="main">
+          <span>🍲</span> Món chính
+        </button>
+        <button type="button" class="cat-btn" data-category="drink">
+          <span>☕</span> Đồ uống
+        </button>
+        <button type="button" class="cat-btn" data-category="snack">
+          <span>🍟</span> Ăn vặt
+        </button>
+        <button type="button" class="cat-btn" data-category="pub">
+          <span>🍻</span> Món nhậu
+        </button>
+      </div>
+
+      <!-- Budget Selector -->
+      <div class="budget-select-wrapper" title="Ngân sách dự tính cho bữa ăn">
+        <select class="budget-select" id="budget-select" aria-label="Ngân sách">
+          <option value="all">Mọi ngân sách</option>
+          <option value="35k">Dưới 35k</option>
+          <option value="50k" selected>Tầm 50k</option>
+          <option value="70k">Tầm 70k</option>
+          <option value="100k">100k+ (Thượng hạng)</option>
+        </select>
+        <span class="select-chevron">▼</span>
+      </div>
+
+      <!-- Vegetarian Filter -->
+      <label class="veg-filter-label" title="Chỉ lọc món ăn chay">
+        <input type="checkbox" id="veg-checkbox" />
+        <span>🌱 Ăn chay</span>
+      </label>
+    </div>
+
+    <!-- MAIN ACTION BUTTON -->
+    <button type="button" class="cta-spin-btn" id="cta-action-btn">
+      <span id="cta-icon">🎯</span>
+      <span id="cta-text">QUAY CHỌN MÓN</span>
+    </button>
+  </section>
+
+  <!-- ================= CATALOG SECTION ================= -->
+  <section class="catalog-section" id="catalog-section">
+    <div class="catalog-header">
+      <div class="catalog-title-wrap">
+        <h2>Thực đơn hôm nay</h2>
+        <p id="catalog-count-text">Khám phá hơn 50+ món ăn đặc sắc phổ biến</p>
+      </div>
+
+      <div class="catalog-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="catalog-search-input" id="catalog-search" placeholder="Tìm phở, bún, cơm, trà..." />
+      </div>
+    </div>
+
+    <div class="catalog-grid" id="catalog-grid">
+      <!-- Injected dynamically by app.js -->
+    </div>
+  </section>
+
+  <!-- ================= RESULT MODAL ================= -->
+  <div class="modal-backdrop" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="modal-dish-name">
+    <div class="result-dialog" id="result-dialog">
+      <!-- Modal Header -->
+      <div class="modal-header-banner">
+        <span class="modal-header-badge">🍽️ GỢI Ý HÔM NAY</span>
+        <button type="button" class="close-modal-btn" id="modal-close-btn" aria-label="Đóng">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-content-body">
+        <div class="modal-food-visual" id="modal-visual">
+          <img id="modal-food-img" src="" alt="Món ăn" />
+        </div>
+
+        <h3 class="modal-dish-name" id="modal-dish-name">Tên món</h3>
+        <div class="modal-dish-meta" id="modal-dish-meta">
+          <span id="modal-category">Danh mục</span>
+          <span>•</span>
+          <span id="modal-origin">Xuất xứ</span>
+          <span id="modal-veg-tag" style="display:none;">• 🌱 Chay</span>
+        </div>
+        <div class="modal-dish-price" id="modal-dish-price">50.000đ / người</div>
+        <p class="modal-dish-desc" id="modal-dish-desc">Mô tả món ăn hấp dẫn.</p>
+
+        <!-- Fortune box for Quẻ trưa -->
+        <div class="fortune-poem-box" id="modal-fortune-box" style="display:none;">
+          <div class="fortune-poem-title" id="fortune-poem-title">AN NHIÊN ĐẮC Ý</div>
+          <p class="fortune-poem-text" id="fortune-poem-text">"Bụng no lòng ấm, vạn sự hanh thông."</p>
+          <p class="fortune-advice" id="fortune-advice">Lời khuyên: Thong thả thưởng thức bữa trưa.</p>
+        </div>
+
+        <!-- Post-spin decision banner (Xóa hoặc để lại) -->
+        <div class="modal-decision-banner" id="modal-decision-banner">
+          <p class="decision-prompt">💡 Bạn có muốn loại món này ra khỏi vòng quay không?</p>
+          <div class="decision-btn-row">
+            <button type="button" class="modal-btn btn-remove-dish" id="btn-remove-winner">
+              <span>🗑️</span> Xóa khỏi vòng quay
+            </button>
+            <button type="button" class="modal-btn btn-keep-dish" id="btn-keep-winner">
+              <span>↩️</span> Để lại & Quay tiếp
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="modal-actions">
+          <div class="action-row-primary">
+            <a href="#" target="_blank" rel="noopener noreferrer" class="modal-btn btn-gmaps" id="btn-gmaps">
+              <span>📍</span> Quán gần đây
+            </a>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="modal-btn btn-delivery" id="btn-delivery">
+              <span>🛵</span> Đặt món ngay
+            </a>
+          </div>
+
+          <div class="action-row-primary">
+            <button type="button" class="modal-btn btn-share" id="btn-share">
+              <span>🔗</span> Chia sẻ món này
+            </button>
+            <button type="button" class="modal-btn btn-spin-again" id="btn-spin-again">
+              <span id="btn-again-icon">🔄</span> <span id="btn-again-text">Quay lại lần nữa</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONTINUOUS FLOATING HEARTS (GÓC DƯỚI BÊN TRÁI) ================= -->
+  <div class="floating-hearts-container" id="floating-hearts-container" aria-label="Hiệu ứng tim bay">
+    <button type="button" class="heart-source-btn" id="heart-source-btn" title="Bấm để bắn thêm tim!">
+      💖
+    </button>
+  </div>
+
+  <!-- ================= MOBILE BOTTOM NAVIGATION BAR ================= -->
+  <nav class="mobile-bottom-nav" aria-label="Thanh điều hướng di động">
+    <button type="button" class="mobile-nav-item active" id="nav-btn-spin">
+      <span class="nav-icon">🎯</span>
+      <span>Quay món</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="nav-btn-que">
+      <span class="nav-icon">🎋</span>
+      <span>Quẻ trưa</span>
+    </button>
+    <a href="#catalog-section" class="mobile-nav-item" id="nav-btn-catalog">
+      <span class="nav-icon">🍔</span>
+      <span>Thực đơn</span>
+    </a>
+  </nav>
+
+  <!-- Toast Notification -->
+  <div class="toast-msg" id="toast-msg">Đã sao chép liên kết vào bộ nhớ tạm!</div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>© 2026 Swiggy • Trưa Nay Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!</p>
+    <p style="margin-top: 0.35rem; font-size: 0.75rem;">Vòng Quay May Mắn & Xin Quẻ Trưa Bình An</p>
+  </footer>
+
+  <script src="data/dishes.js"></script>
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
