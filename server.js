@@ -41,6 +41,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// JSON body không hợp lệ -> trả lỗi gọn, không lộ stack trace/đường dẫn server
+app.use((err, req, res, next) => {
+  if (err && err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'invalid_json_body' });
+  }
+  next(err);
+});
+
 // Toàn bộ key/value hiện có, dùng để hydrate localStorage khi trang tải lên
 app.get('/api/kv', (req, res) => {
   const rows = getAllStmt.all();
