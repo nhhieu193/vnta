@@ -2686,6 +2686,14 @@ body {
    MOBILE RESPONSIVE RULES (< 768px & < 480px)
    ========================================================= */
 @media (max-width: 768px) {
+  /* Safari iOS tự động zoom khi focus vào input có font-size < 16px, bất kể
+     user-scalable=no — kết hợp với maximum-scale=1.0 gây "kẹt" zoom lệch cả
+     trang sau khi rời input đó. Ép tối thiểu 16px cho mọi ô nhập liệu để
+     tránh Safari kích hoạt zoom. */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
   body {
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }

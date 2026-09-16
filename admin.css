@@ -1081,6 +1081,12 @@ body {
 }
 
 @media (max-width: 768px) {
+  /* Safari iOS tự động zoom khi focus vào input có font-size < 16px, gây
+     "kẹt" zoom lệch cả trang. Ép tối thiểu 16px cho mọi ô nhập liệu. */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
   .admin-sidebar {
     transform: translateX(-100%);
   }
