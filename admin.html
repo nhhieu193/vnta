@@ -260,9 +260,14 @@
       <div class="panel">
         <div class="panel-header">
           <h3>👥 Danh sách tài khoản người dùng</h3>
-          <div class="search-wrap">
-            <span>🔍</span>
-            <input type="text" id="users-search" placeholder="Tìm theo tên đăng nhập, vai trò..." />
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="save-btn" id="btn-bulk-change-pwd" title="Đổi mật khẩu cho tất cả tài khoản cùng lúc">
+              🔑 Đổi mật khẩu tất cả
+            </button>
+            <div class="search-wrap">
+              <span>🔍</span>
+              <input type="text" id="users-search" placeholder="Tìm theo tên đăng nhập, vai trò..." />
+            </div>
           </div>
         </div>
 

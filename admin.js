@@ -660,9 +660,14 @@ function renderUsersTable(filteredUsers) {
         <td>${roleBadge}</td>
         <td><span style="color:var(--admin-text-dim);font-size:0.85rem;">${u.createdAt || '16/09/2026'}</span></td>
         <td>
-          <button type="button" class="btn-delete-user" ${isCurrent ? 'disabled title="Không thể xóa tài khoản của chính bạn"' : `onclick="deleteUser('${u.id}')"`}>
-            🗑️ Xóa
-          </button>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn-toggle-eye-row" onclick="changeUserPassword('${u.id}')" title="Đổi mật khẩu">
+              🔑 Đổi mật khẩu
+            </button>
+            <button type="button" class="btn-delete-user" ${isCurrent ? 'disabled title="Không thể xóa tài khoản của chính bạn"' : `onclick="deleteUser('${u.id}')"`}>
+              🗑️ Xóa
+            </button>
+          </div>
         </td>
       </tr>
     `;
@@ -753,6 +758,48 @@ window.toggleUserPwd = function (userId) {
   }
   filterUsersTable();
 };
+
+window.changeUserPassword = function (userId) {
+  const users = getUsers();
+  const target = users.find(u => u.id === userId);
+  if (!target) return;
+
+  const newPassword = prompt(`Nhập mật khẩu mới cho tài khoản "${target.username}":`);
+  if (newPassword === null) return; // bấm Cancel
+  if (!newPassword.trim()) {
+    showAdminToast('Mật khẩu không được để trống!', 'error');
+    return;
+  }
+
+  target.password = newPassword.trim();
+  saveUsers(users);
+  logAdminAction('USER_PASSWORD_CHANGED', `Đổi mật khẩu tài khoản "${target.username}"`);
+  showAdminToast(`Đã đổi mật khẩu cho "${target.username}"!`, 'success');
+  renderUsersTab();
+};
+
+function handleBulkChangePassword() {
+  const users = getUsers();
+  if (users.length === 0) return;
+
+  const newPassword = prompt(`Nhập mật khẩu mới áp dụng cho TẤT CẢ ${users.length} tài khoản:`);
+  if (newPassword === null) return; // bấm Cancel
+  if (!newPassword.trim()) {
+    showAdminToast('Mật khẩu không được để trống!', 'error');
+    return;
+  }
+
+  if (!confirm(`Đổi mật khẩu cho toàn bộ ${users.length} tài khoản thành mật khẩu mới này? Hành động này không thể hoàn tác.`)) {
+    return;
+  }
+
+  const trimmed = newPassword.trim();
+  users.forEach(u => { u.password = trimmed; });
+  saveUsers(users);
+  logAdminAction('USER_PASSWORD_CHANGED_BULK', `Đổi mật khẩu hàng loạt cho ${users.length} tài khoản`);
+  showAdminToast(`Đã đổi mật khẩu cho tất cả ${users.length} tài khoản!`, 'success');
+  renderUsersTab();
+}
 
 window.deleteUser = deleteUser;
 
@@ -1209,6 +1256,12 @@ function setupEvents() {
       currentUsersSearch = e.target.value;
       filterUsersTable();
     });
+  }
+
+  // Users tab: bulk change password
+  const bulkChangePwdBtn = document.getElementById('btn-bulk-change-pwd');
+  if (bulkChangePwdBtn) {
+    bulkChangePwdBtn.addEventListener('click', handleBulkChangePassword);
   }
 
   // Popup settings: form submit
