@@ -8,3 +8,4 @@ db/*.db
 db/*.db-shm
 db/*.db-wal
 .claude/
+.env
