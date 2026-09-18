@@ -18,7 +18,7 @@
       title: 'TƠ HỒNG SE DUYÊN',
       tag: 'Thượng Cát',
       poem: 'Bữa ăn đậm đà là lời mở đầu cho một câu chuyện dài. Ông tơ đã se, bà nguyệt đã định, chỉ chờ hai người cùng nâng đũa.',
-      advice: 'Đừng ngại hỏi thêm một câu về sở thích của người ấy, duyên tình từ đó mà sâu đậm.'
+      advice: 'Đừng ngại hỏi thêm một câu về sở thích của Trâm Anh, duyên tình từ đó mà sâu đậm.'
     },
     {
       title: 'TÌNH TRONG NHƯ ĐÃ',
@@ -35,8 +35,8 @@
     {
       title: 'TRĂM NĂM HẠNH PHÚC',
       tag: 'Đại Cát',
-      poem: 'Vạn sự khởi từ một bữa ăn chung. Bữa hẹn hôm nay tròn vị, hứa hẹn một chặng đường dài cùng nhau đi tới.',
-      advice: 'Chụp lại một tấm ảnh kỷ niệm, để ngày hôm nay trở thành một mốc đáng nhớ.'
+      poem: 'Vạn sự khởi từ một bữa ăn chung. Bữa hẹn hôm nay tròn vị, hứa hẹn một chặng đường dài cùng Trâm Anh đi tới.',
+      advice: 'Chụp lại một tấm ảnh kỷ niệm cùng Trâm Anh, để ngày hôm nay trở thành một mốc đáng nhớ.'
     }
   ];
 

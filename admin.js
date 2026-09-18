@@ -911,8 +911,8 @@ const DEFAULT_UI_SETTINGS = {
   ketBadge: 'YÊU LÀ CHIỀU · CHỌN MÓN TRONG 3 GIÂY',
   queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
-  brandLocationText: '💘 Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
-  footerText: '© 2026 First Date Ăn Gì 💕 — Chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
+  brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
 function getUiSettings() {

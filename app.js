@@ -299,8 +299,8 @@ const DEFAULT_UI_SETTINGS = {
   ketBadge: 'YÊU LÀ CHIỀU · CHỌN MÓN TRONG 3 GIÂY',
   queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
-  brandLocationText: '💘 Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
-  footerText: '© 2026 First Date Ăn Gì 💕 — Chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
+  brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
 function getUiSettings() {
@@ -939,8 +939,8 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.brandIcon.textContent = '🍲';
     DOM.brandTitle.textContent = uiSettings.ketBrandTitle;
     DOM.bannerBadge.textContent = uiSettings.ketBadge;
-    DOM.bannerTitle.textContent = 'Hôm nay mình ăn gì cùng nhau? 💕';
-    DOM.bannerSubtitle.textContent = 'Xoay vòng quay se duyên để ông trời chọn giúp món ăn, hay lắc quẻ duyên tình cho buổi hẹn thêm ngọt ngào!';
+    DOM.bannerTitle.textContent = 'Trâm Anh ơi, hôm nay mình ăn gì đây? 💕';
+    DOM.bannerSubtitle.textContent = 'Xoay vòng quay se duyên để ông trời chọn giúp Trâm Anh một món ngon, hay lắc quẻ duyên tình xem hôm nay có gì đặc biệt cho hai đứa mình!';
 
     DOM.arenaKet.classList.add('active');
     DOM.arenaQue.classList.remove('active');
@@ -962,8 +962,8 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.brandIcon.textContent = '🎋';
     DOM.brandTitle.textContent = uiSettings.queBrandTitle;
     DOM.bannerBadge.textContent = uiSettings.queBadge;
-    DOM.bannerTitle.textContent = 'Xin Quẻ Duyên Tình 💞';
-    DOM.bannerSubtitle.textContent = 'Cầu một chữ duyên, thưởng một bữa lành. Lắc ống quẻ tre nhận lời mách bảo cho chuyện tình cảm!';
+    DOM.bannerTitle.textContent = 'Xin Quẻ Duyên Tình Cho Trâm Anh 💞';
+    DOM.bannerSubtitle.textContent = 'Cầu một chữ duyên, thưởng một bữa lành. Lắc ống quẻ tre xem trời đất mách bảo gì cho chuyện tình cảm của hai đứa mình!';
 
     DOM.arenaQue.classList.add('active');
     DOM.arenaKet.classList.remove('active');
