@@ -1,4 +1,4 @@
-// hydrate.js - Đồng bộ localStorage với SQLite qua API /api/kv
+// hydrate.js - Đồng bộ localStorage với MySQL qua API /api/kv
 // Phải load TRƯỚC app.js/admin.js để dữ liệu server có sẵn trong localStorage
 // trước khi các đoạn code khác đọc localStorage.
 (function () {
@@ -14,8 +14,8 @@
     'tnag_dishes'
   ];
 
-  // API_BASE trống = cùng domain (relative path). Khi frontend host trên GitHub Pages
-  // và API chạy trên VPS domain khác, khai báo window.TNAG_API_BASE trong config.js.
+  // API_BASE trống = cùng domain (relative path). Khai báo window.TNAG_API_BASE trong
+  // config.js nếu frontend và API chạy khác domain.
   var API_BASE = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
   // Khớp với API_KEY trên server (nếu có cấu hình) để tránh người lạ gọi thẳng API.
   var API_KEY = window.TNAG_API_KEY || '';
@@ -23,12 +23,11 @@
   // 1) Kéo dữ liệu mới nhất từ server về localStorage (đồng bộ, chặn tải trang
   //    một chút để đảm bảo code chạy sau đọc được dữ liệu đã đồng bộ).
   //
-  //    QUAN TRỌNG: nếu bước này thất bại (server đang restart, Render "ngủ" chưa
-  //    kịp dậy, mất mạng...), thiết bị sẽ TẮT việc đẩy dữ liệu lên server trong
-  //    suốt phiên này. Nếu không, các đoạn code "nếu localStorage rỗng thì tự
-  //    ghi giá trị mặc định" (getUsers, getPopupSettings...) sẽ ghi đè dữ liệu
-  //    mặc định/rỗng lên server, xóa mất dữ liệu thật mà các thiết bị khác đã
-  //    tích lũy trước đó.
+  //    QUAN TRỌNG: nếu bước này thất bại (server đang restart, mất mạng...), thiết bị
+  //    sẽ TẮT việc đẩy dữ liệu lên server trong suốt phiên này. Nếu không, các đoạn
+  //    code "nếu localStorage rỗng thì tự ghi giá trị mặc định" (getUsers,
+  //    getPopupSettings...) sẽ ghi đè dữ liệu mặc định/rỗng lên server, xóa mất dữ
+  //    liệu thật mà các thiết bị khác đã tích lũy trước đó.
   var syncEnabled = false;
   try {
     var xhr = new XMLHttpRequest();
