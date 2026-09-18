@@ -856,12 +856,11 @@ function updatePreview() {
   DOM.previewBtnYes.textContent = yesText;
   DOM.previewBtnNo.textContent = noText;
 
-  if (questions.length > 0) {
-    DOM.previewExtra.style.display = 'block';
-    DOM.previewQuestion.textContent = questions[0];
-  } else {
-    DOM.previewExtra.style.display = 'none';
-  }
+  // Không hiển thị sẵn câu hỏi trước khi demo bấm "Không", để khớp hành vi
+  // trang thật (chỉ hiện sau lần bấm "Không" đầu tiên) — tránh cảm giác
+  // câu hỏi 1 bị lặp lại ngay từ lần bấm đầu.
+  DOM.previewExtra.style.display = 'none';
+  DOM.previewQuestion.textContent = '';
 
   resetPreviewDemo();
 }
@@ -882,20 +881,42 @@ function resetPreviewDemo() {
   previewNoClickCount = 0;
   DOM.previewBtnYes.className = 'preview-btn preview-btn-yes';
   DOM.previewBtnNo.className = 'preview-btn preview-btn-no';
+  DOM.previewBtnYes.removeAttribute('style');
+  DOM.previewBtnNo.removeAttribute('style');
+  DOM.previewBtnNo.disabled = false;
 }
 
 function handlePreviewNoClick() {
+  if (DOM.previewBtnNo.disabled) return;
   previewNoClickCount++;
-  const growLevel = Math.min(previewNoClickCount, 4);
-  DOM.previewBtnYes.className = 'preview-btn preview-btn-yes grow-' + growLevel;
-  DOM.previewBtnNo.className = 'preview-btn preview-btn-no shrink-' + growLevel;
 
   const questions = DOM.popupNoQuestions.value.split('\n').map(q => q.trim()).filter(q => q.length > 0);
   const list = questions.length > 0 ? questions : PREVIEW_DEFAULT_QUESTIONS;
-  const qIndex = Math.min(previewNoClickCount - 1, list.length - 1);
+  const total = list.length;
+  const qIndex = Math.min(previewNoClickCount - 1, total - 1);
 
   DOM.previewExtra.style.display = 'block';
   DOM.previewQuestion.textContent = list[qIndex];
+
+  // Tỉ lệ tiến trình 0 → 1 dựa trên tổng số câu hỏi thật sự có, y hệt trang thật
+  const ratio = Math.min(previewNoClickCount / total, 1);
+
+  DOM.previewBtnYes.className = 'preview-btn preview-btn-yes';
+  DOM.previewBtnYes.style.fontSize = (1.02 + ratio * 0.55).toFixed(2) + 'rem';
+  DOM.previewBtnYes.style.padding = Math.round(12 + ratio * 8) + 'px ' + Math.round(26 + ratio * 16) + 'px';
+  DOM.previewBtnYes.style.boxShadow = '0 ' + Math.round(6 + ratio * 8) + 'px ' + Math.round(18 + ratio * 14) + 'px rgba(252, 128, 25, ' + (0.5 + ratio * 0.3).toFixed(2) + ')';
+
+  DOM.previewBtnNo.className = 'preview-btn preview-btn-no';
+  DOM.previewBtnNo.style.fontSize = Math.max(0.85 - ratio * 0.8, 0.05).toFixed(2) + 'rem';
+  DOM.previewBtnNo.style.padding = Math.max(8 - ratio * 7, 1) + 'px ' + Math.max(16 - ratio * 14, 2) + 'px';
+  DOM.previewBtnNo.style.opacity = Math.max(1 - ratio * 1.15, 0).toFixed(2);
+
+  // Đến câu hỏi cuối cùng: nút "Không" biến mất hẳn, demo không bấm được nữa
+  if (previewNoClickCount >= total) {
+    DOM.previewBtnNo.disabled = true;
+    DOM.previewBtnNo.style.pointerEvents = 'none';
+    DOM.previewBtnNo.style.visibility = 'hidden';
+  }
 }
 
 function handlePreviewYesClick() {

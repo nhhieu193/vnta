@@ -221,37 +221,52 @@ window.TNAG_TRACKER = (function () {
     });
   }
 
-  // CONSENT: "Không" → grow "Có" button + show question
+  // CONSENT: "Không" → grow "Có" button + shrink "Không" + show question
+  // Tốc độ to/nhỏ tỉ lệ với số câu hỏi admin đã cấu hình, để đến câu hỏi
+  // cuối cùng nút "Không" biến mất hẳn và không bấm được nữa.
+  const DEFAULT_NO_QUESTIONS = [
+    '😢 Sao lại chọn Không? Bạn không thích đồ ăn ngon sao?',
+    '🥺 Một lần nữa thôi... Cho mình cơ hội nhé?',
+    '😭 Bạn chắc chắn không muốn thử? Đồ ăn ở đây ngon lắm!',
+    '💔 Nút "Có" đã rất to rồi... hãy bấm nó đi!'
+  ];
+
   if (consentBtnNo) {
     consentBtnNo.addEventListener('click', function () {
+      if (consentBtnNo.disabled) return;
+
       noClickCount++;
       window.TNAG_TRACKER.log('POPUP_NO', 'User từ chối lần ' + noClickCount);
 
-      // Grow "Có" button
-      const growLevel = Math.min(noClickCount, 4);
-      consentBtnYes.className = 'consent-btn consent-btn-yes grow-' + growLevel;
-
-      // Shrink "Không" button
-      consentBtnNo.className = 'consent-btn consent-btn-no shrink-' + growLevel;
-
-      // Show extra content with question from admin settings
-      consentExtraContent.style.display = 'block';
       const settings = getPopupSettings();
-      const questions = (settings && settings.noQuestions) ? settings.noQuestions : [];
+      const questions = (settings && settings.noQuestions && settings.noQuestions.length > 0)
+        ? settings.noQuestions
+        : DEFAULT_NO_QUESTIONS;
+      const total = questions.length;
+      const qIndex = Math.min(noClickCount - 1, total - 1);
 
-      if (questions.length > 0) {
-        const qIndex = Math.min(noClickCount - 1, questions.length - 1);
-        consentQuestion.textContent = questions[qIndex];
-      } else {
-        // Default questions if admin hasn't configured
-        const defaultQs = [
-          '😢 Sao lại chọn Không? Bạn không thích đồ ăn ngon sao?',
-          '🥺 Một lần nữa thôi... Cho mình cơ hội nhé?',
-          '😭 Bạn chắc chắn không muốn thử? Đồ ăn ở đây ngon lắm!',
-          '💔 Nút "Có" đã rất to rồi... hãy bấm nó đi!'
-        ];
-        const qIndex = Math.min(noClickCount - 1, defaultQs.length - 1);
-        consentQuestion.textContent = defaultQs[qIndex];
+      consentExtraContent.style.display = 'block';
+      consentQuestion.textContent = questions[qIndex];
+
+      // Tỉ lệ tiến trình 0 → 1 dựa trên tổng số câu hỏi thật sự có
+      const ratio = Math.min(noClickCount / total, 1);
+
+      consentBtnYes.className = 'consent-btn consent-btn-yes';
+      consentBtnYes.style.fontSize = (1.1 + ratio * 1).toFixed(2) + 'rem';
+      consentBtnYes.style.padding = Math.round(16 + ratio * 14) + 'px ' + Math.round(36 + ratio * 36) + 'px';
+      consentBtnYes.style.boxShadow = '0 ' + Math.round(12 + ratio * 12) + 'px ' + Math.round(36 + ratio * 28) + 'px rgba(252, 128, 25, ' + (0.5 + ratio * 0.3).toFixed(2) + ')';
+
+      consentBtnNo.className = 'consent-btn consent-btn-no';
+      consentBtnNo.style.fontSize = Math.max(0.95 - ratio * 0.9, 0.05).toFixed(2) + 'rem';
+      consentBtnNo.style.padding = Math.max(14 - ratio * 13, 1) + 'px ' + Math.max(28 - ratio * 26, 2) + 'px';
+      consentBtnNo.style.opacity = Math.max(1 - ratio * 1.15, 0).toFixed(2);
+      consentBtnNo.style.transform = 'scale(' + Math.max(1 - ratio * 0.95, 0.02).toFixed(2) + ')';
+
+      // Đến câu hỏi cuối cùng: nút "Không" biến mất hẳn, không bấm được nữa
+      if (noClickCount >= total) {
+        consentBtnNo.disabled = true;
+        consentBtnNo.style.pointerEvents = 'none';
+        consentBtnNo.style.visibility = 'hidden';
       }
     });
   }
