@@ -295,12 +295,12 @@ const SLICE_COLORS = [
 // UI SETTINGS (Admin-configurable brand text)
 // ==========================================
 const DEFAULT_UI_SETTINGS = {
-  ketBrandTitle: 'FIRST DATE ĂN GÌ',
-  ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
-  queBrandTitle: 'QUẺ TRƯA MAY MẮN',
-  queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
-  brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
-  footerText: '© 2026 First Date Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+  ketBrandTitle: 'FIRST DATE ĂN GÌ 💕',
+  ketBadge: 'YÊU LÀ CHIỀU · CHỌN MÓN TRONG 3 GIÂY',
+  queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
+  queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
+  brandLocationText: '💘 Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  footerText: '© 2026 First Date Ăn Gì 💕 — Chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
 function getUiSettings() {
@@ -939,15 +939,15 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.brandIcon.textContent = '🍲';
     DOM.brandTitle.textContent = uiSettings.ketBrandTitle;
     DOM.bannerBadge.textContent = uiSettings.ketBadge;
-    DOM.bannerTitle.textContent = 'Hôm nay ăn gì?';
-    DOM.bannerSubtitle.textContent = 'Xoay vòng tròn tự chọn món ăn ngẫu nhiên hoặc lắc quẻ trưa thư giãn!';
+    DOM.bannerTitle.textContent = 'Hôm nay mình ăn gì cùng nhau? 💕';
+    DOM.bannerSubtitle.textContent = 'Xoay vòng quay se duyên để ông trời chọn giúp món ăn, hay lắc quẻ duyên tình cho buổi hẹn thêm ngọt ngào!';
 
     DOM.arenaKet.classList.add('active');
     DOM.arenaQue.classList.remove('active');
 
-    DOM.ctaIcon.textContent = '🎯';
-    DOM.ctaText.textContent = 'QUAY CHỌN MÓN';
-    DOM.btnAgainText.textContent = 'Quay lần nữa';
+    DOM.ctaIcon.textContent = '💘';
+    DOM.ctaText.textContent = 'QUAY SE DUYÊN MÓN ĂN';
+    DOM.btnAgainText.textContent = 'Quay duyên tiếp';
 
     DOM.navBtnSpin.classList.add('active');
     DOM.navBtnQue.classList.remove('active');
@@ -962,15 +962,15 @@ function applyTheme(newTheme, updateUrl = true) {
     DOM.brandIcon.textContent = '🎋';
     DOM.brandTitle.textContent = uiSettings.queBrandTitle;
     DOM.bannerBadge.textContent = uiSettings.queBadge;
-    DOM.bannerTitle.textContent = 'Lắc quẻ tầm vị';
-    DOM.bannerSubtitle.textContent = 'Cầu một chữ an, thưởng một bữa lành. Lắc ống quẻ tre nhận thông điệp bữa trưa!';
+    DOM.bannerTitle.textContent = 'Xin Quẻ Duyên Tình 💞';
+    DOM.bannerSubtitle.textContent = 'Cầu một chữ duyên, thưởng một bữa lành. Lắc ống quẻ tre nhận lời mách bảo cho chuyện tình cảm!';
 
     DOM.arenaQue.classList.add('active');
     DOM.arenaKet.classList.remove('active');
 
     DOM.ctaIcon.textContent = '🎋';
-    DOM.ctaText.textContent = 'XIN MỘT QUẺ';
-    DOM.btnAgainText.textContent = 'Xin quẻ khác';
+    DOM.ctaText.textContent = 'XIN QUẺ DUYÊN TÌNH';
+    DOM.btnAgainText.textContent = 'Xin thêm quẻ duyên';
 
     DOM.navBtnQue.classList.add('active');
     DOM.navBtnSpin.classList.remove('active');
@@ -1133,7 +1133,7 @@ function openResultModal(dish, fortune = null) {
     DOM.modalDecisionBanner.style.display = 'none';
   }
 
-  // Fortune box for Quẻ trưa
+  // Fortune box for Quẻ duyên tình yêu
   if (fortune || state.theme === 'que-trua') {
     const activeFortune = fortune || FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
     DOM.modalFortuneBox.style.display = 'block';
@@ -1411,8 +1411,8 @@ function updateAudioButton() {
 // ==========================================
 function setupEventListeners() {
   // Theme Buttons
-  DOM.btnThemeKet.addEventListener('click', () => { window.TNAG_TRACKER.log('SWITCH_THEME', 'Vòng quay chọn món'); applyTheme('ket-hoi-tho-lun'); });
-  DOM.btnThemeQue.addEventListener('click', () => { window.TNAG_TRACKER.log('SWITCH_THEME', 'Quẻ trưa may mắn'); applyTheme('que-trua'); });
+  DOM.btnThemeKet.addEventListener('click', () => { window.TNAG_TRACKER.log('SWITCH_THEME', 'Vòng Quay Se Duyên'); applyTheme('ket-hoi-tho-lun'); });
+  DOM.btnThemeQue.addEventListener('click', () => { window.TNAG_TRACKER.log('SWITCH_THEME', 'Quẻ Duyên Tình Yêu'); applyTheme('que-trua'); });
 
   // Mobile Bottom Navigation Bar
   if (DOM.navBtnSpin) {

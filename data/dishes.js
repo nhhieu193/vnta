@@ -3,40 +3,40 @@
 (function(global) {
   const FORTUNES = [
     {
-      title: 'AN NHIÊN ĐẮC Ý',
+      title: 'DUYÊN LÀNH HỘI NGỘ',
       tag: 'Thượng Cát',
-      poem: 'Một ngày không cần mọi việc đều như ý mới có một bữa ngon. Tận hưởng hương vị thanh lành trước mắt, lòng an ắt việc thuận.',
-      advice: 'Uống một ngụm nước mát, thả lỏng đôi vai, thong thả thưởng thức bữa trưa.'
+      poem: 'Một bữa ăn hợp ý cũng là một chữ duyên. Ánh mắt trao nhau qua làn khói món ngon, tình cảm nhân đó mà thêm gắn bó.',
+      advice: 'Ngồi gần nhau hơn một chút, để câu chuyện được rót đầy như ly nước đang cạn.'
     },
     {
-      title: 'HOAN HỶ ĐONG ĐẦY',
+      title: 'HOA THẮM NGÀY XANH',
       tag: 'Đại Cát',
-      poem: 'Gặp món hợp khẩu như gặp tri kỷ. Ăn ngon cho lòng phấn chấn, nụ cười nở rạng rỡ đón chào buổi chiều hanh thông.',
-      advice: 'Rủ thêm một người đồng nghiệp cùng ăn, sẻ chia niềm vui nhỏ giữa ngày.'
+      poem: 'Gặp người hợp gu như gặp một nửa đã tìm kiếm bấy lâu. Bữa ăn ngon khiến lòng rộn ràng, nụ cười theo đó mà nở suốt buổi hẹn.',
+      advice: 'Gọi thêm một món tráng miệng để chia đôi, ngọt ngào càng thêm trọn vẹn.'
     },
     {
-      title: 'ĐẮC LỘC TOÀN GIA',
+      title: 'TƠ HỒNG SE DUYÊN',
       tag: 'Thượng Cát',
-      poem: 'Bữa trưa đậm đà mang sinh khí mới. Nạp đầy năng lượng dồi dào, tài lộc hanh thông, công việc gặt hái kết quả bất ngờ.',
-      advice: 'Ăn chậm nhai kỹ, dành 5 phút chợp mắt sau bữa để phục hồi sinh lực.'
+      poem: 'Bữa ăn đậm đà là lời mở đầu cho một câu chuyện dài. Ông tơ đã se, bà nguyệt đã định, chỉ chờ hai người cùng nâng đũa.',
+      advice: 'Đừng ngại hỏi thêm một câu về sở thích của người ấy, duyên tình từ đó mà sâu đậm.'
     },
     {
-      title: 'TINH TẤN VƯƠN XA',
+      title: 'TÌNH TRONG NHƯ ĐÃ',
       tag: 'Cát Lành',
-      poem: 'Bụng no chí sáng. Vị ngon đánh thức tinh thần sảng khoái, vượt qua thử thách êm đẹp như dòng nước trôi.',
-      advice: 'Tạm gác lại email công việc trong 20 phút này để cảm nhận trọn vẹn hương vị.'
+      poem: 'Bụng no lòng ấm, ánh mắt thêm long lanh. Vị ngon trước mặt đánh thức những rung động vốn còn e ấp giữa hai người.',
+      advice: 'Cất điện thoại vào túi 20 phút, để trọn vẹn khoảnh khắc chỉ có hai người.'
     },
     {
-      title: 'THƯ THÁI TỰ TẠI',
+      title: 'BÊN NHAU BÌNH YÊN',
       tag: 'Bình An',
-      poem: 'Giữa nhịp sống vội vã, một đĩa cơm nóng canh ngọt là bến đỗ bình yên. Thả lỏng tâm trí, nạp lại an vui.',
-      advice: 'Chọn một góc ngồi thoáng đãng, nghe một bản nhạc nhẹ không lời.'
+      poem: 'Giữa phố xá vội vã, một bữa ăn ấm cùng người thương là bến đỗ dịu dàng nhất. Thả lỏng tâm hồn, để tình cảm được vun đầy.',
+      advice: 'Chọn một góc ngồi yên tĩnh, để câu chuyện giữa hai người không bị vội vã cắt ngang.'
     },
     {
-      title: 'VIÊN MÃN CÁT TƯỜNG',
+      title: 'TRĂM NĂM HẠNH PHÚC',
       tag: 'Đại Cát',
-      poem: 'Vạn sự khởi từ bữa cơm ấm. Bữa trưa tròn vị cho ngày dài trọn vẹn, mọi lo toan hóa thành hư không.',
-      advice: 'Tự thưởng thêm cho mình một món tráng miệng hoặc ly trà mát.'
+      poem: 'Vạn sự khởi từ một bữa ăn chung. Bữa hẹn hôm nay tròn vị, hứa hẹn một chặng đường dài cùng nhau đi tới.',
+      advice: 'Chụp lại một tấm ảnh kỷ niệm, để ngày hôm nay trở thành một mốc đáng nhớ.'
     }
   ];
 

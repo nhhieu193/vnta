@@ -907,12 +907,12 @@ function handlePreviewYesClick() {
 // TAB 5: CÀI ĐẶT GIAO DIỆN
 // ==========================================
 const DEFAULT_UI_SETTINGS = {
-  ketBrandTitle: 'FIRST DATE ĂN GÌ',
-  ketBadge: 'CHỌN MÓN NGAY · 3 GIÂY QUYẾT ĐỊNH',
-  queBrandTitle: 'QUẺ TRƯA MAY MẮN',
-  queBadge: 'QUẺ TRƯA · CHIÊM NGHIỆM VỊ GIÁC',
-  brandLocationText: '✨ Bữa Trưa Huyền Diệu 🎋',
-  footerText: '© 2026 First Date Ăn Gì — Chúc bạn có một bữa trưa ngon miệng và tràn đầy năng lượng!'
+  ketBrandTitle: 'FIRST DATE ĂN GÌ 💕',
+  ketBadge: 'YÊU LÀ CHIỀU · CHỌN MÓN TRONG 3 GIÂY',
+  queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
+  queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
+  brandLocationText: '💘 Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  footerText: '© 2026 First Date Ăn Gì 💕 — Chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
 function getUiSettings() {
