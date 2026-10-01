@@ -868,11 +868,11 @@ function drawWheel(angle = 0) {
     ctx.stroke();
 
     ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+    ctx.font = 'bold 16px "Be Vietnam Pro", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Vòng quay chưa có món', cx, cy - 10);
-    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '13px "Be Vietnam Pro", sans-serif';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText('Thêm món vào danh sách bên cạnh!', cx, cy + 15);
     ctx.restore();
@@ -916,7 +916,7 @@ function drawWheel(angle = 0) {
     ctx.shadowBlur = 4;
 
     const fontSize = total > 12 ? 11 : total > 8 ? 13 : 14;
-    ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+    ctx.font = `800 ${fontSize}px "Be Vietnam Pro", sans-serif`;
 
     let displayName = dish.name;
     const maxChars = total > 10 ? 12 : 16;
