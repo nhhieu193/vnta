@@ -3070,3 +3070,7 @@ input[type="text"], input[type="password"], input[type="number"], input[type="se
 .mode-banner, .site-footer, .otp-card { text-align: center; }
 .login-logo-circle, .consent-icon { margin-left: auto; margin-right: auto; display: flex; align-items: center; justify-content: center; }
 .login-subtitle { max-width: 32ch; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+/* Hộp quẻ bấm được để lắc */
+.bamboo-cylinder-wrap { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bamboo-cylinder-wrap:active .bamboo-cylinder:not(.shaking) { transform: scale(0.97); }

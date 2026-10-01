@@ -1642,6 +1642,16 @@ function setupEventListeners() {
     });
   }
 
+  // Bấm vào hộp quẻ cũng bắt đầu lắc (giống nút "XIN MỘT QUẺ")
+  const cylinderWrap = document.getElementById('bamboo-cylinder-wrap');
+  if (cylinderWrap) {
+    cylinderWrap.addEventListener('click', () => {
+      if (state.theme === 'ket-hoi-tho-lun' || state.queState !== 'idle') return;
+      window.TNAG_TRACKER.log('SHAKE_QUE', 'Bấm hộp quẻ');
+      startQueProcess();
+    });
+  }
+
   // Catalog search input
   DOM.catalogSearch.addEventListener('input', (e) => {
     if (e.target.value.length > 0) window.TNAG_TRACKER.log('SEARCH_CATALOG', 'Tìm kiếm: ' + e.target.value);
