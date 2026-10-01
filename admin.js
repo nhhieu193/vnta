@@ -132,6 +132,7 @@ const DOM = {
   // UI settings tab
   uiSettingsForm: document.getElementById('uisettings-form'),
   uiBrandLocation: document.getElementById('ui-brand-location'),
+  uiOtpCode: document.getElementById('ui-otp-code'),
   uiKetTitle: document.getElementById('ui-ket-title'),
   uiQueTitle: document.getElementById('ui-que-title'),
   uiKetBadge: document.getElementById('ui-ket-badge'),
@@ -933,6 +934,7 @@ const DEFAULT_UI_SETTINGS = {
   queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
   brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  otpCode: '1234',
   footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
@@ -948,6 +950,7 @@ function getUiSettings() {
 function loadUiSettings() {
   const settings = getUiSettings();
   DOM.uiBrandLocation.value = settings.brandLocationText;
+  DOM.uiOtpCode.value = settings.otpCode;
   DOM.uiKetTitle.value = settings.ketBrandTitle;
   DOM.uiQueTitle.value = settings.queBrandTitle;
   DOM.uiKetBadge.value = settings.ketBadge;
@@ -958,6 +961,7 @@ function loadUiSettings() {
 function saveUiSettings() {
   const settings = {
     brandLocationText: DOM.uiBrandLocation.value.trim() || DEFAULT_UI_SETTINGS.brandLocationText,
+    otpCode: (DOM.uiOtpCode.value.replace(/\D/g, '').slice(0, 4).padEnd(4, '0')) || DEFAULT_UI_SETTINGS.otpCode,
     ketBrandTitle: DOM.uiKetTitle.value.trim() || DEFAULT_UI_SETTINGS.ketBrandTitle,
     queBrandTitle: DOM.uiQueTitle.value.trim() || DEFAULT_UI_SETTINGS.queBrandTitle,
     ketBadge: DOM.uiKetBadge.value.trim() || DEFAULT_UI_SETTINGS.ketBadge,

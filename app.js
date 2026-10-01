@@ -144,6 +144,101 @@ window.TNAG_TRACKER = (function () {
     }
   }
 
+  // OTP: hiện mã 4 số (admin cài), nhập đúng → 4 ô hợp thành trái tim → popup
+  function showOtpThenConsent() {
+    const otpOverlay = document.getElementById('otp-overlay');
+    if (!otpOverlay) { showConsentPopup(); return; }
+    const code = String(getUiSettings().otpCode || '1234').replace(/\D/g, '').slice(0, 4).padEnd(4, '0');
+    const card = document.getElementById('otp-card');
+    const display = document.getElementById('otp-code-display');
+    const boxes = Array.from(document.querySelectorAll('#otp-boxes .otp-box'));
+    const err = document.getElementById('otp-error');
+    const heart = document.getElementById('otp-heart');
+    display.innerHTML = code.split('').map(function (d) { return '<span>' + d + '</span>'; }).join('');
+    boxes.forEach(function (b) { b.value = ''; b.disabled = false; b.style.transform = ''; });
+    otpOverlay.className = 'otp-overlay';
+    otpOverlay.style.display = 'flex';
+    setTimeout(function () { boxes[0].focus(); }, 100);
+
+    function onSuccess() {
+      boxes.forEach(function (b) { b.disabled = true; });
+      display.style.opacity = '0';
+      const target = boxes[0].parentElement.getBoundingClientRect();
+      const cx = target.left + target.width / 2;
+      const cy = target.top + target.height / 2;
+      boxes.forEach(function (b) {
+        const r = b.getBoundingClientRect();
+        b.style.setProperty('--dx', (cx - (r.left + r.width / 2)) + 'px');
+        b.style.setProperty('--dy', (cy - (r.top + r.height / 2)) + 'px');
+      });
+      heart.style.left = cx + 'px';
+      heart.style.top = cy + 'px';
+      otpOverlay.classList.add('merging');
+      setTimeout(function () {
+        otpOverlay.classList.add('heart-show');
+        const ring = document.createElement('div');
+        ring.className = 'otp-ring';
+        ring.style.left = cx + 'px';
+        ring.style.top = cy + 'px';
+        otpOverlay.appendChild(ring);
+        const icons = ['✨', '💗', '✦', '💖', '✨', '♥'];
+        for (let k = 0; k < 18; k++) {
+          const sp = document.createElement('span');
+          sp.className = 'otp-spark';
+          sp.textContent = icons[k % icons.length];
+          const ang = (Math.PI * 2 * k) / 18 + Math.random() * 0.3;
+          const dist = 110 + Math.random() * 120;
+          sp.style.left = cx + 'px';
+          sp.style.top = cy + 'px';
+          sp.style.setProperty('--sx', Math.cos(ang) * dist + 'px');
+          sp.style.setProperty('--sy', Math.sin(ang) * dist + 'px');
+          otpOverlay.appendChild(sp);
+          setTimeout(function () { sp.remove(); }, 1200);
+        }
+        setTimeout(function () { ring.remove(); }, 1000);
+      }, 800);
+      setTimeout(function () { otpOverlay.classList.add('closing'); }, 2250);
+      setTimeout(function () {
+        otpOverlay.style.display = 'none';
+        showConsentPopup();
+      }, 2800);
+    }
+
+    function check() {
+      const val = boxes.map(function (b) { return b.value; }).join('');
+      if (val.length < 4) return;
+      if (val === code) {
+        err.style.display = 'none';
+        onSuccess();
+      } else {
+        err.style.display = 'block';
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+        boxes.forEach(function (b) { b.value = ''; });
+        boxes[0].focus();
+      }
+    }
+
+    boxes.forEach(function (b, i) {
+      b.oninput = function () {
+        b.value = b.value.replace(/\D/g, '').slice(-1);
+        if (b.value && i < 3) boxes[i + 1].focus();
+        check();
+      };
+      b.onkeydown = function (e) {
+        if (e.key === 'Backspace' && !b.value && i > 0) boxes[i - 1].focus();
+      };
+      b.onpaste = function (e) {
+        const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+        if (!t) return;
+        e.preventDefault();
+        boxes.forEach(function (x, j) { x.value = t[j] || ''; });
+        check();
+      };
+    });
+  }
+
   function showConsentPopup() {
     applyPopupContent();
     consentOverlay.style.display = 'flex';
@@ -206,7 +301,7 @@ window.TNAG_TRACKER = (function () {
     setTimeout(function () {
       loginOverlay.style.display = 'none';
       document.body.classList.remove('login-active');
-      showConsentPopup();
+      showOtpThenConsent();
     }, 600);
   });
 
@@ -315,6 +410,7 @@ const DEFAULT_UI_SETTINGS = {
   queBrandTitle: 'QUẺ DUYÊN TÌNH YÊU',
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
   brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
+  otpCode: '1234',
   footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
