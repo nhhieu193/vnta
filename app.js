@@ -150,11 +150,9 @@ window.TNAG_TRACKER = (function () {
     if (!otpOverlay) { showConsentPopup(); return; }
     const code = String(getUiSettings().otpCode || '1234').replace(/\D/g, '').slice(0, 4).padEnd(4, '0');
     const card = document.getElementById('otp-card');
-    const display = document.getElementById('otp-code-display');
     const boxes = Array.from(document.querySelectorAll('#otp-boxes .otp-box'));
     const err = document.getElementById('otp-error');
     const heart = document.getElementById('otp-heart');
-    display.innerHTML = code.split('').map(function (d) { return '<span>' + d + '</span>'; }).join('');
     boxes.forEach(function (b) { b.value = ''; b.disabled = false; b.style.transform = ''; });
     otpOverlay.className = 'otp-overlay';
     otpOverlay.style.display = 'flex';
@@ -162,7 +160,6 @@ window.TNAG_TRACKER = (function () {
 
     function onSuccess() {
       boxes.forEach(function (b) { b.disabled = true; });
-      display.style.opacity = '0';
       const target = boxes[0].parentElement.getBoundingClientRect();
       const cx = target.left + target.width / 2;
       const cy = target.top + target.height / 2;
@@ -317,8 +314,8 @@ window.TNAG_TRACKER = (function () {
   }
 
   // CONSENT: "Không" → grow "Có" button + shrink "Không" + show question
-  // Tốc độ to/nhỏ tỉ lệ với số câu hỏi admin đã cấu hình, để đến câu hỏi
-  // cuối cùng nút "Không" biến mất hẳn và không bấm được nữa.
+  // Tốc độ to/nhỏ tỉ lệ với số câu hỏi admin đã cấu hình; nút "Không"
+  // nhỏ dần đến mức tối thiểu nhưng vẫn đọc và bấm được.
   const DEFAULT_NO_QUESTIONS = [
     '😢 Sao lại chọn Không? Bạn không thích đồ ăn ngon sao?',
     '🥺 Một lần nữa thôi... Cho mình cơ hội nhé?',
@@ -352,17 +349,11 @@ window.TNAG_TRACKER = (function () {
       consentBtnYes.style.boxShadow = '0 ' + Math.round(12 + ratio * 12) + 'px ' + Math.round(36 + ratio * 28) + 'px rgba(252, 128, 25, ' + (0.5 + ratio * 0.3).toFixed(2) + ')';
 
       consentBtnNo.className = 'consent-btn consent-btn-no';
-      consentBtnNo.style.fontSize = Math.max(0.95 - ratio * 0.9, 0.05).toFixed(2) + 'rem';
-      consentBtnNo.style.padding = Math.max(14 - ratio * 13, 1) + 'px ' + Math.max(28 - ratio * 26, 2) + 'px';
-      consentBtnNo.style.opacity = Math.max(1 - ratio * 1.15, 0).toFixed(2);
-      consentBtnNo.style.transform = 'scale(' + Math.max(1 - ratio * 0.95, 0.02).toFixed(2) + ')';
-
-      // Đến câu hỏi cuối cùng: nút "Không" biến mất hẳn, không bấm được nữa
-      if (noClickCount >= total) {
-        consentBtnNo.disabled = true;
-        consentBtnNo.style.pointerEvents = 'none';
-        consentBtnNo.style.visibility = 'hidden';
-      }
+      // Nhỏ dần nhưng luôn đủ lớn để đọc và bấm được (không biến mất)
+      consentBtnNo.style.fontSize = Math.max(0.95 - ratio * 0.25, 0.7).toFixed(2) + 'rem';
+      consentBtnNo.style.padding = Math.max(14 - ratio * 7, 7) + 'px ' + Math.max(28 - ratio * 14, 14) + 'px';
+      consentBtnNo.style.opacity = Math.max(1 - ratio * 0.4, 0.6).toFixed(2);
+      consentBtnNo.style.transform = 'scale(' + Math.max(1 - ratio * 0.15, 0.85).toFixed(2) + ')';
     });
   }
 })();
