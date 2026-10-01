@@ -176,6 +176,7 @@ const TAB_TITLES = {
   users: '👥 Quản Lý Người Dùng',
   popup: '⚙️ Cài Đặt Popup',
   uisettings: '🎨 Cài Đặt Giao Diện',
+  music: '🎵 Nhạc Kết Quả',
   plan: '📅 Kế Hoạch'
 };
 
@@ -193,6 +194,7 @@ function switchTab(tabName) {
   if (tabName === 'users') renderUsersTab();
   if (tabName === 'popup') loadPopupSettings();
   if (tabName === 'uisettings') loadUiSettings();
+  if (tabName === 'music') renderMusicTab();
   if (tabName === 'plan') renderPlanTab();
 
   // Close mobile sidebar
@@ -973,6 +975,83 @@ function saveUiSettings() {
 }
 
 // ==========================================
+// TAB: NHẠC KẾT QUẢ (MP3)
+// ==========================================
+const MUSIC_API = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
+
+function getMusic() {
+  try {
+    const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
+    return { que: m.que || [], wheel: m.wheel || [] };
+  } catch (e) {
+    return { que: [], wheel: [] };
+  }
+}
+
+function saveMusic(m) {
+  localStorage.setItem('tnag_music', JSON.stringify(m));
+}
+
+function renderMusicTab() {
+  const m = getMusic();
+  [['que', 'music-que-list'], ['wheel', 'music-wheel-list']].forEach(([group, id]) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    if (!m[group].length) {
+      box.innerHTML = '<p class="panel-desc">Chưa có bài nào.</p>';
+      return;
+    }
+    box.innerHTML = m[group].map((t, i) => `
+      <div class="music-item">
+        <span class="music-name">${i + 1}. ${escapeHtml(t.name)}</span>
+        <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}"></audio>
+        <button type="button" class="btn-delete-user" data-group="${group}" data-file="${escapeHtml(t.file)}">🗑 Xóa</button>
+      </div>`).join('');
+  });
+}
+
+async function uploadMusic(group, files) {
+  const headers = { 'Content-Type': 'audio/mpeg' };
+  if (window.TNAG_API_KEY) headers['X-API-Key'] = window.TNAG_API_KEY;
+  for (const f of Array.from(files)) {
+    if (!/\.mp3$/i.test(f.name)) { showAdminToast('Bỏ qua "' + f.name + '": chỉ nhận file MP3'); continue; }
+    try {
+      const res = await fetch(MUSIC_API + '/api/music?name=' + encodeURIComponent(f.name), { method: 'POST', headers, body: f });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      const m = getMusic();
+      m[group].push({ name: f.name.replace(/\.mp3$/i, ''), file: data.file });
+      saveMusic(m);
+      showAdminToast('Đã tải lên: ' + f.name);
+    } catch (err) {
+      showAdminToast('Tải lên thất bại (' + f.name + '): ' + err.message);
+    }
+  }
+  renderMusicTab();
+}
+
+function setupMusicEvents() {
+  [['que', 'music-que-file'], ['wheel', 'music-wheel-file']].forEach(([group, id]) => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('change', () => { uploadMusic(group, input.files).then(() => { input.value = ''; }); });
+  });
+  ['music-que-list', 'music-wheel-list'].forEach(id => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-file]');
+      if (!btn) return;
+      const headers = window.TNAG_API_KEY ? { 'X-API-Key': window.TNAG_API_KEY } : {};
+      try { await fetch(MUSIC_API + '/api/music/' + encodeURIComponent(btn.dataset.file), { method: 'DELETE', headers }); } catch (err) {}
+      const m = getMusic();
+      m[btn.dataset.group] = m[btn.dataset.group].filter(t => t.file !== btn.dataset.file);
+      saveMusic(m);
+      renderMusicTab();
+    });
+  });
+}
+
+// ==========================================
 // TAB 6: KẾ HOẠCH
 // ==========================================
 const DEFAULT_PLAN_THANKYOU = {
@@ -1207,6 +1286,7 @@ function showAdminToast(message, type = 'success') {
 // EVENT LISTENERS
 // ==========================================
 function setupEvents() {
+  setupMusicEvents();
   // Tab Navigation
   DOM.navItems.forEach(item => {
     item.addEventListener('click', () => switchTab(item.dataset.tab));

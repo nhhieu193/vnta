@@ -41,6 +41,10 @@
         <span class="nav-icon">🎨</span>
         <span>Cài Đặt Giao Diện</span>
       </button>
+      <button type="button" class="nav-item" id="nav-music" data-tab="music">
+        <span class="nav-icon">🎵</span>
+        <span>Nhạc Kết Quả</span>
+      </button>
       <button type="button" class="nav-item" id="nav-plan" data-tab="plan">
         <span class="nav-icon">📅</span>
         <span>Kế Hoạch</span>
@@ -416,6 +420,25 @@
     </section>
 
     <!-- TAB 6: KẾ HOẠCH -->
+    <section class="tab-content" id="tab-music">
+      <div class="panel">
+        <div class="panel-header"><h3>🎋 Nhạc khi gieo quẻ</h3></div>
+        <p class="panel-desc">Mỗi lần gieo trúng 1 quẻ, hệ thống phát ngẫu nhiên 1 bài trong danh sách này (khuyến nghị 5 bài). Chỉ nhận file MP3, tối đa 25MB/bài.</p>
+        <div class="form-group">
+          <input type="file" id="music-que-file" accept=".mp3,audio/mpeg" multiple />
+        </div>
+        <div class="music-list" id="music-que-list"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>🎡 Nhạc khi quay vòng quay</h3></div>
+        <p class="panel-desc">Mỗi lần vòng quay dừng ở 1 ô, hệ thống phát ngẫu nhiên 1 bài trong danh sách này.</p>
+        <div class="form-group">
+          <input type="file" id="music-wheel-file" accept=".mp3,audio/mpeg" multiple />
+        </div>
+        <div class="music-list" id="music-wheel-list"></div>
+      </div>
+    </section>
+
     <section class="tab-content" id="tab-plan">
       <!-- Stats Cards -->
       <div class="stats-grid" id="plan-stats-grid">

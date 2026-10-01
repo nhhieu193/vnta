@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const mysql = require('mysql2/promise');
 
 const PORT = process.env.PORT || 3000;
@@ -98,6 +99,35 @@ app.delete('/api/kv/:key', async (req, res) => {
   await pool.query('DELETE FROM kv_store WHERE `key` = ?', [req.params.key]);
   res.json({ ok: true });
 });
+
+// ---- Nhạc MP3 (admin tải lên, lưu trên đĩa VPS; danh sách lưu trong kv_store key tnag_music) ----
+const MUSIC_DIR = path.join(__dirname, 'uploads', 'music');
+fs.mkdirSync(MUSIC_DIR, { recursive: true });
+
+function requireApiKey(req, res, next) {
+  if (!API_KEY || req.header('x-api-key') === API_KEY) return next();
+  res.status(401).json({ error: 'unauthorized' });
+}
+
+// Body gửi lên là dữ liệu MP3 thô; tên gốc truyền qua query ?name=
+app.post('/api/music', requireApiKey, express.raw({ type: '*/*', limit: '25mb' }), (req, res) => {
+  const buf = req.body;
+  if (!Buffer.isBuffer(buf) || buf.length < 4) return res.status(400).json({ error: 'empty_file' });
+  const isId3 = buf.slice(0, 3).toString('latin1') === 'ID3';
+  const isFrame = buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0;
+  if (!isId3 && !isFrame) return res.status(400).json({ error: 'not_mp3' });
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const file = id + '.mp3';
+  fs.writeFileSync(path.join(MUSIC_DIR, file), buf);
+  res.json({ ok: true, id, file });
+});
+
+app.delete('/api/music/:file', requireApiKey, (req, res) => {
+  if (!/^[a-z0-9]+\.mp3$/.test(req.params.file)) return res.status(400).json({ error: 'bad_name' });
+  fs.rm(path.join(MUSIC_DIR, req.params.file), { force: true }, () => res.json({ ok: true }));
+});
+
+app.use('/uploads/music', express.static(MUSIC_DIR));
 
 // Phục vụ file tĩnh của site (index.html, admin.html, app.js, css, data/...)
 app.use(express.static(__dirname));

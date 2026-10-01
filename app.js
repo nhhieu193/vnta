@@ -1214,7 +1214,28 @@ function startQueProcess() {
 // ==========================================
 // RESULT MODAL
 // ==========================================
+// ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
+let resultAudio = null;
+function playResultMusic(group) {
+  stopResultMusic();
+  try {
+    if (sound.isMuted()) return;
+    const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
+    const list = m[group] || [];
+    if (!list.length) return;
+    const track = list[Math.floor(Math.random() * list.length)];
+    const base = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
+    resultAudio = new Audio(base + '/uploads/music/' + encodeURIComponent(track.file));
+    resultAudio.volume = 0.8;
+    resultAudio.play().catch(() => {});
+  } catch (e) {}
+}
+function stopResultMusic() {
+  if (resultAudio) { resultAudio.pause(); resultAudio = null; }
+}
+
 function openResultModal(dish, fortune = null) {
+  playResultMusic(fortune || state.theme === 'que-trua' ? 'que' : 'wheel');
   state.activeDish = dish;
   state.activeFortune = fortune;
   window.TNAG_TRACKER.log('VIEW_RESULT', 'Xem kết quả: ' + dish.name);
@@ -1263,6 +1284,7 @@ function openResultModal(dish, fortune = null) {
 }
 
 function closeResultModal() {
+  stopResultMusic();
   DOM.resultModal.classList.remove('open');
 }
 

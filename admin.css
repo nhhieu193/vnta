@@ -1175,3 +1175,8 @@ input[type="text"], input[type="password"], input[type="number"], input[type="se
 .sidebar-brand { align-items: center; }
 .stat-card, [class*="stat-"] { text-align: left; }
 th, td { vertical-align: middle; }
+
+.music-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.music-item { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--admin-border); border-radius: 12px; background: var(--admin-surface); }
+.music-name { flex: 1 1 160px; font-weight: 600; word-break: break-word; }
+.music-item audio { height: 36px; max-width: 100%; }

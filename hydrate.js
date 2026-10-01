@@ -11,7 +11,8 @@
     'tnag_plan_movies',
     'tnag_plan_thankyou',
     'tnag_plans',
-    'tnag_dishes'
+    'tnag_dishes',
+    'tnag_music'
   ];
 
   // API_BASE trống = cùng domain (relative path). Khai báo window.TNAG_API_BASE trong
