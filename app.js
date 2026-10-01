@@ -315,7 +315,7 @@ window.TNAG_TRACKER = (function () {
 
   // CONSENT: "Không" → grow "Có" button + shrink "Không" + show question
   // Tốc độ to/nhỏ tỉ lệ với số câu hỏi admin đã cấu hình; nút "Không"
-  // nhỏ dần đến mức tối thiểu nhưng vẫn đọc và bấm được.
+  // nhỏ dần đến mức tối thiểu; ở câu cuối vẫn hiện nhưng bị khóa.
   const DEFAULT_NO_QUESTIONS = [
     '😢 Sao lại chọn Không? Bạn không thích đồ ăn ngon sao?',
     '🥺 Một lần nữa thôi... Cho mình cơ hội nhé?',
@@ -354,6 +354,14 @@ window.TNAG_TRACKER = (function () {
       consentBtnNo.style.padding = Math.max(14 - ratio * 7, 7) + 'px ' + Math.max(28 - ratio * 14, 14) + 'px';
       consentBtnNo.style.opacity = Math.max(1 - ratio * 0.4, 0.6).toFixed(2);
       consentBtnNo.style.transform = 'scale(' + Math.max(1 - ratio * 0.15, 0.85).toFixed(2) + ')';
+
+      // Đến câu hỏi cuối cùng: nút "Không" vẫn hiện (nhỏ) nhưng không bấm được nữa
+      if (noClickCount >= total) {
+        consentBtnNo.disabled = true;
+        consentBtnNo.style.pointerEvents = 'none';
+        consentBtnNo.style.cursor = 'not-allowed';
+        consentBtnNo.style.opacity = '0.45';
+      }
     });
   }
 })();
