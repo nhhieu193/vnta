@@ -1220,7 +1220,17 @@ function startQueProcess() {
 let resultAudio = null;
 const lastTrackFile = {};
 let resultTimeHandler = null;
-const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQAAAAA=';
+// WAV im lặng hợp lệ (0.1s, 8kHz, 8-bit mono) để mở khóa phát tiếng trên mobile (iOS từ chối file rỗng)
+const SILENT_WAV = (() => {
+  const n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const w = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  w(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44);
+  let bin = ''; b.forEach(x => { bin += String.fromCharCode(x); });
+  return 'data:audio/wav;base64,' + btoa(bin);
+})();
 
 // Dùng 1 phần tử Audio duy nhất cho mọi lần phát. Phải "mở khóa" nó ngay trong cú bấm của người dùng
 // (bấm quay / bấm gieo quẻ), vì trình duyệt chặn phát tiếng khi gọi trễ sau animation.
@@ -1228,6 +1238,7 @@ function getResultAudio() {
   if (!resultAudio) { resultAudio = new Audio(); resultAudio.preload = 'auto'; }
   return resultAudio;
 }
+document.addEventListener('pointerdown', () => unlockResultAudio(), { once: true, capture: true });
 function unlockResultAudio() {
   try {
     const a = getResultAudio();
@@ -1258,7 +1269,12 @@ function playResultMusic(group) {
     if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
     resultTimeHandler = end ? () => { if (a.currentTime >= end) a.pause(); } : null;
     if (resultTimeHandler) a.addEventListener('timeupdate', resultTimeHandler);
-    a.play().catch(err => console.warn('[music] Không phát được nhạc:', err));
+    a.play().catch(err => {
+      console.warn('[music] Không phát được nhạc:', err);
+      // Bị trình duyệt (mobile) chặn: thử lại ngay ở lần chạm kế tiếp của người dùng
+      const retry = () => { if (a.src && a.paused && a === resultAudio) a.play().catch(() => {}); };
+      document.addEventListener('pointerdown', retry, { once: true, capture: true });
+    });
   } catch (e) { console.warn('[music]', e); }
 }
 function stopResultMusic() {
