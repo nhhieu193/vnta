@@ -979,12 +979,17 @@ function saveUiSettings() {
 // ==========================================
 const MUSIC_API = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
 
+// Một danh sách nhạc dùng chung cho quẻ + vòng quay: { all: [...] }.
+// Dữ liệu cũ tách 2 nhóm { que, wheel } được gộp lại (bỏ bài ở nhóm vòng quay trùng tên với nhóm quẻ).
 function getMusic() {
   try {
     const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
-    return { que: m.que || [], wheel: m.wheel || [] };
+    if (Array.isArray(m.all)) return { all: m.all };
+    const que = m.que || [], wheel = m.wheel || [];
+    const names = new Set(que.map(t => t.name));
+    return { all: que.concat(wheel.filter(t => !names.has(t.name))), legacy: !!(m.que || m.wheel) };
   } catch (e) {
-    return { que: [], wheel: [] };
+    return { all: [] };
   }
 }
 
@@ -994,7 +999,8 @@ function saveMusic(m) {
 
 function renderMusicTab() {
   const m = getMusic();
-  [['que', 'music-que-list'], ['wheel', 'music-wheel-list']].forEach(([group, id]) => {
+  if (m.legacy) { delete m.legacy; saveMusic(m); }
+  [['all', 'music-all-list']].forEach(([group, id]) => {
     const box = document.getElementById(id);
     if (!box) return;
     if (!m[group].length) {
@@ -1035,11 +1041,11 @@ async function uploadMusic(group, files) {
 }
 
 function setupMusicEvents() {
-  [['que', 'music-que-file'], ['wheel', 'music-wheel-file']].forEach(([group, id]) => {
+  [['all', 'music-all-file']].forEach(([group, id]) => {
     const input = document.getElementById(id);
     if (input) input.addEventListener('change', () => { uploadMusic(group, input.files).then(() => { input.value = ''; }); });
   });
-  ['music-que-list', 'music-wheel-list'].forEach(id => {
+  ['music-all-list'].forEach(id => {
     const box = document.getElementById(id);
     if (!box) return;
     // Nghe thử đúng đoạn đã chỉ định: nhảy tới giây bắt đầu khi bấm play, dừng ở giây kết thúc

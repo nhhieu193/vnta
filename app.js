@@ -1216,7 +1216,7 @@ function startQueProcess() {
 // ==========================================
 // RESULT MODAL
 // ==========================================
-// ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
+// ---- Nhạc MP3 do admin cài: 1 danh sách dùng chung cho cả quẻ và vòng quay, mỗi lần ra kết quả random 1 bài ----
 // iPhone (Safari) chỉ cho phát tiếng khi play() được gọi ngay trong cú chạm của người dùng. Vì vậy:
 //  1) prepareResultMusic(group) chạy NGAY trong cú bấm quay / gieo quẻ: chọn sẵn bài, gán src và play()
 //     ở chế độ tắt tiếng rồi dừng lại → phần tử Audio + bài đó được trình duyệt cho phép.
@@ -1245,14 +1245,23 @@ function musicRange(track) {
   const end = track.end != null && Number(track.end) > start ? Number(track.end) : null;
   return { start, end };
 }
-// Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên)
-function pickMusicTrack(group) {
-  let list = [];
-  try { list = (JSON.parse(localStorage.getItem('tnag_music') || 'null') || {})[group] || []; } catch (e) {}
+// Danh sách chung { all: [...] }; vẫn đọc được dữ liệu cũ { que, wheel } (gộp lại, bỏ bài trùng tên)
+function getMusicList() {
+  try {
+    const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
+    if (Array.isArray(m.all)) return m.all;
+    const que = m.que || [], wheel = m.wheel || [];
+    const names = new Set(que.map(t => t.name));
+    return que.concat(wheel.filter(t => !names.has(t.name)));
+  } catch (e) { return []; }
+}
+// Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên), tính chung cho cả quẻ và vòng quay
+function pickMusicTrack() {
+  const list = getMusicList();
   if (!list.length) return null;
-  const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile[group]) : list;
+  const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile.all) : list;
   const track = pool[Math.floor(Math.random() * pool.length)];
-  lastTrackFile[group] = track.file;
+  lastTrackFile.all = track.file;
   return track;
 }
 
