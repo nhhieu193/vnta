@@ -1197,7 +1197,7 @@ function startQueProcess() {
 
     // Update single fallen stick UI
     if (DOM.fallenStickHead) DOM.fallenStickHead.textContent = fortune.tag || 'THƯỢNG CÁT';
-    if (DOM.fallenStickText) DOM.fallenStickText.textContent = fortune.title.split(' ')[0] || 'AN NHIÊN';
+    if (DOM.fallenStickText) DOM.fallenStickText.innerHTML = Array.from(fortune.title.split(' ')[0] || 'AN NHIÊN').map(ch => '<span>' + ch + '</span>').join('');
 
     if (DOM.fallenStickWrapper) DOM.fallenStickWrapper.classList.add('popping-out');
     if (DOM.queInstruction) DOM.queInstruction.textContent = `✨ Một quẻ may mắn đã rớt ra ngoài: "${fortune.title}"!`;
