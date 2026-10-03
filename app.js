@@ -1227,7 +1227,12 @@ function playResultMusic(group) {
     const base = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
     resultAudio = new Audio(base + '/uploads/music/' + encodeURIComponent(track.file));
     resultAudio.volume = 0.8;
-    resultAudio.play().catch(() => {});
+    const a = resultAudio;
+    const start = Number(track.start) || 0;
+    const end = track.end != null && Number(track.end) > start ? Number(track.end) : null;
+    if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
+    if (end) a.addEventListener('timeupdate', () => { if (a.currentTime >= end) a.pause(); });
+    a.play().catch(() => {});
   } catch (e) {}
 }
 function stopResultMusic() {

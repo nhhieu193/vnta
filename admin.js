@@ -1005,6 +1005,10 @@ function renderMusicTab() {
       <div class="music-item">
         <span class="music-name">${i + 1}. ${escapeHtml(t.name)}</span>
         <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}"></audio>
+        <span class="music-range">Phát từ
+          <input type="number" min="0" step="1" class="music-start" data-group="${group}" data-file="${escapeHtml(t.file)}" value="${t.start == null ? '' : t.start}" placeholder="0" /> đến
+          <input type="number" min="0" step="1" class="music-end" data-group="${group}" data-file="${escapeHtml(t.file)}" value="${t.end == null ? '' : t.end}" placeholder="hết bài" /> giây
+        </span>
         <button type="button" class="btn-delete-user" data-group="${group}" data-file="${escapeHtml(t.file)}">🗑 Xóa</button>
       </div>`).join('');
   });
@@ -1020,7 +1024,7 @@ async function uploadMusic(group, files) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
       const m = getMusic();
-      m[group].push({ name: f.name.replace(/\.mp3$/i, ''), file: data.file });
+      m[group].push({ name: f.name.replace(/\.mp3$/i, ''), file: data.file, start: 30, end: 60 });
       saveMusic(m);
       showAdminToast('Đã tải lên: ' + f.name);
     } catch (err) {
@@ -1038,6 +1042,42 @@ function setupMusicEvents() {
   ['music-que-list', 'music-wheel-list'].forEach(id => {
     const box = document.getElementById(id);
     if (!box) return;
+    // Nghe thử đúng đoạn đã chỉ định: nhảy tới giây bắt đầu khi bấm play, dừng ở giây kết thúc
+    const trackOf = (audio) => {
+      const item = audio.closest('.music-item');
+      const del = item && item.querySelector('button[data-file]');
+      return del ? getMusic()[del.dataset.group].find(x => x.file === del.dataset.file) : null;
+    };
+    box.addEventListener('play', (e) => {
+      const a = e.target;
+      if (a.tagName !== 'AUDIO') return;
+      const t = trackOf(a);
+      const start = t && Number(t.start) || 0;
+      const end = t && t.end != null ? Number(t.end) : null;
+      if (start > 0 && (a.currentTime < start || (end && a.currentTime >= end))) a.currentTime = start;
+      else if (end && a.currentTime >= end) a.currentTime = start;
+    }, true);
+    box.addEventListener('timeupdate', (e) => {
+      const a = e.target;
+      if (a.tagName !== 'AUDIO' || a.paused) return;
+      const t = trackOf(a);
+      if (t && t.end != null && Number(t.end) > (Number(t.start) || 0) && a.currentTime >= Number(t.end)) {
+        a.pause();
+        a.currentTime = Number(t.start) || 0;
+      }
+    }, true);
+    box.addEventListener('change', (e) => {
+      const inp = e.target.closest('.music-start, .music-end');
+      if (!inp) return;
+      const m = getMusic();
+      const t = m[inp.dataset.group].find(x => x.file === inp.dataset.file);
+      if (!t) return;
+      const v = inp.value === '' ? null : Math.max(0, Number(inp.value));
+      t[inp.classList.contains('music-start') ? 'start' : 'end'] = v;
+      if (t.start != null && t.end != null && t.end <= t.start) { showAdminToast('Giây kết thúc phải lớn hơn giây bắt đầu'); renderMusicTab(); return; }
+      saveMusic(m);
+      showAdminToast('Đã lưu đoạn phát');
+    });
     box.addEventListener('click', async (e) => {
       const btn = e.target.closest('button[data-file]');
       if (!btn) return;

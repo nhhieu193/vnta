@@ -1180,3 +1180,5 @@ th, td { vertical-align: middle; }
 .music-item { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--admin-border); border-radius: 12px; background: var(--admin-surface); }
 .music-name { flex: 1 1 160px; font-weight: 600; word-break: break-word; }
 .music-item audio { height: 36px; max-width: 100%; }
+.music-range { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.music-range input { width: 80px; padding: 4px 6px; border: 1px solid var(--admin-border); border-radius: 8px; }
