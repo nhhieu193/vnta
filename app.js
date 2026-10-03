@@ -963,6 +963,7 @@ function spinCircularWheel() {
   DOM.ctaActionBtn.disabled = true;
 
   sound.init();
+  unlockResultAudio();
   sound.playSpinStart();
 
   const total = state.wheelDishes.length;
@@ -1151,6 +1152,7 @@ function startQueProcess() {
   DOM.ctaActionBtn.disabled = true;
 
   sound.init();
+  unlockResultAudio();
 
   // Giai đoạn 1: 5 Quẻ che tên trải xòe ra bàn
   if (DOM.queStep1) DOM.queStep1.className = 'step-badge active';
@@ -1217,6 +1219,25 @@ function startQueProcess() {
 // ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
 let resultAudio = null;
 const lastTrackFile = {};
+let resultTimeHandler = null;
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQAAAAA=';
+
+// Dùng 1 phần tử Audio duy nhất cho mọi lần phát. Phải "mở khóa" nó ngay trong cú bấm của người dùng
+// (bấm quay / bấm gieo quẻ), vì trình duyệt chặn phát tiếng khi gọi trễ sau animation.
+function getResultAudio() {
+  if (!resultAudio) { resultAudio = new Audio(); resultAudio.preload = 'auto'; }
+  return resultAudio;
+}
+function unlockResultAudio() {
+  try {
+    const a = getResultAudio();
+    if (!a.paused || a.dataset.unlocked) return;
+    a.src = SILENT_WAV;
+    a.play().then(() => { a.pause(); a.dataset.unlocked = '1'; }).catch(() => {});
+  } catch (e) {}
+}
+
+// ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
 function playResultMusic(group) {
   stopResultMusic();
   try {
@@ -1229,18 +1250,21 @@ function playResultMusic(group) {
     const track = pool[Math.floor(Math.random() * pool.length)];
     lastTrackFile[group] = track.file;
     const base = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
-    resultAudio = new Audio(base + '/uploads/music/' + encodeURIComponent(track.file));
-    resultAudio.volume = 0.8;
-    const a = resultAudio;
+    const a = getResultAudio();
     const start = Number(track.start) || 0;
     const end = track.end != null && Number(track.end) > start ? Number(track.end) : null;
+    a.src = base + '/uploads/music/' + encodeURIComponent(track.file);
+    a.volume = 0.8;
     if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
-    if (end) a.addEventListener('timeupdate', () => { if (a.currentTime >= end) a.pause(); });
-    a.play().catch(() => {});
-  } catch (e) {}
+    resultTimeHandler = end ? () => { if (a.currentTime >= end) a.pause(); } : null;
+    if (resultTimeHandler) a.addEventListener('timeupdate', resultTimeHandler);
+    a.play().catch(err => console.warn('[music] Không phát được nhạc:', err));
+  } catch (e) { console.warn('[music]', e); }
 }
 function stopResultMusic() {
-  if (resultAudio) { resultAudio.pause(); resultAudio = null; }
+  if (!resultAudio) return;
+  resultAudio.pause();
+  if (resultTimeHandler) { resultAudio.removeEventListener('timeupdate', resultTimeHandler); resultTimeHandler = null; }
 }
 
 function openResultModal(dish, fortune = null) {
