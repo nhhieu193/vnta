@@ -1216,6 +1216,7 @@ function startQueProcess() {
 // ==========================================
 // ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
 let resultAudio = null;
+const lastTrackFile = {};
 function playResultMusic(group) {
   stopResultMusic();
   try {
@@ -1223,7 +1224,10 @@ function playResultMusic(group) {
     const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
     const list = m[group] || [];
     if (!list.length) return;
-    const track = list[Math.floor(Math.random() * list.length)];
+    // Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên)
+    const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile[group]) : list;
+    const track = pool[Math.floor(Math.random() * pool.length)];
+    lastTrackFile[group] = track.file;
     const base = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
     resultAudio = new Audio(base + '/uploads/music/' + encodeURIComponent(track.file));
     resultAudio.volume = 0.8;
