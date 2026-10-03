@@ -1018,7 +1018,7 @@ async function uploadMusic(group, files) {
   const headers = { 'Content-Type': 'audio/mpeg' };
   if (window.TNAG_API_KEY) headers['X-API-Key'] = window.TNAG_API_KEY;
   for (const f of Array.from(files)) {
-    if (!/\.mp3$/i.test(f.name)) { showAdminToast('Bỏ qua "' + f.name + '": chỉ nhận file MP3'); continue; }
+    if (!/\.mp3$/i.test(f.name)) { showAdminToast('Bỏ qua "' + f.name + '": chỉ nhận file MP3', 'error'); continue; }
     try {
       const res = await fetch(MUSIC_API + '/api/music?name=' + encodeURIComponent(f.name), { method: 'POST', headers, body: f });
       const data = await res.json();
@@ -1028,7 +1028,7 @@ async function uploadMusic(group, files) {
       saveMusic(m);
       showAdminToast('Đã tải lên: ' + f.name);
     } catch (err) {
-      showAdminToast('Tải lên thất bại (' + f.name + '): ' + err.message);
+      showAdminToast('Tải lên thất bại (' + f.name + '): ' + err.message, 'error');
     }
   }
   renderMusicTab();
@@ -1074,7 +1074,7 @@ function setupMusicEvents() {
       if (!t) return;
       const v = inp.value === '' ? null : Math.max(0, Number(inp.value));
       t[inp.classList.contains('music-start') ? 'start' : 'end'] = v;
-      if (t.start != null && t.end != null && t.end <= t.start) { showAdminToast('Giây kết thúc phải lớn hơn giây bắt đầu'); renderMusicTab(); return; }
+      if (t.start != null && t.end != null && t.end <= t.start) { showAdminToast('Giây kết thúc phải lớn hơn giây bắt đầu', 'error'); renderMusicTab(); return; }
       saveMusic(m);
       showAdminToast('Đã lưu đoạn phát');
     });
