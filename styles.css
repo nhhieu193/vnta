@@ -2101,7 +2101,15 @@ body {
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.35);
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+  /* Luôn 2 dòng cố định, căn giữa, mọi độ rộng thiết bị */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.35;
+  border-radius: 18px;
 }
+.modal-header-badge .badge-line { display: block; white-space: nowrap; }
 
 .close-modal-btn {
   background: rgba(255, 255, 255, 0.08);
