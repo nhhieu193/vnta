@@ -963,7 +963,7 @@ function spinCircularWheel() {
   DOM.ctaActionBtn.disabled = true;
 
   sound.init();
-  unlockResultAudio();
+  prepareResultMusic('wheel');
   sound.playSpinStart();
 
   const total = state.wheelDishes.length;
@@ -1152,7 +1152,7 @@ function startQueProcess() {
   DOM.ctaActionBtn.disabled = true;
 
   sound.init();
-  unlockResultAudio();
+  prepareResultMusic('que');
 
   // Giai đoạn 1: 5 Quẻ che tên trải xòe ra bàn
   if (DOM.queStep1) DOM.queStep1.className = 'step-badge active';
@@ -1217,67 +1217,121 @@ function startQueProcess() {
 // RESULT MODAL
 // ==========================================
 // ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
+// iPhone (Safari) chỉ cho phát tiếng khi play() được gọi ngay trong cú chạm của người dùng. Vì vậy:
+//  1) prepareResultMusic(group) chạy NGAY trong cú bấm quay / gieo quẻ: chọn sẵn bài, gán src và play()
+//     ở chế độ tắt tiếng rồi dừng lại → phần tử Audio + bài đó được trình duyệt cho phép.
+//  2) playResultMusic(group) khi hiện kết quả: bật tiếng, tua tới giây bắt đầu và phát tiếp bài đã chuẩn bị.
+//  3) Nếu vẫn bị chặn: phát bằng Web Audio (AudioContext đã mở khóa trong cú bấm qua sound.init()).
 let resultAudio = null;
-const lastTrackFile = {};
 let resultTimeHandler = null;
-// WAV im lặng hợp lệ (0.1s, 8kHz, 8-bit mono) để mở khóa phát tiếng trên mobile (iOS từ chối file rỗng)
-const SILENT_WAV = (() => {
-  const n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
-  const w = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
-  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt ');
-  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
-  w(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44);
-  let bin = ''; b.forEach(x => { bin += String.fromCharCode(x); });
-  return 'data:audio/wav;base64,' + btoa(bin);
-})();
+let resultSource = null;     // nguồn Web Audio (đường dự phòng)
+let preparedTrack = null;    // { group, track } đã chuẩn bị trong cú bấm
+let resultPlayToken = 0;
+const lastTrackFile = {};
 
-// Dùng 1 phần tử Audio duy nhất cho mọi lần phát. Phải "mở khóa" nó ngay trong cú bấm của người dùng
-// (bấm quay / bấm gieo quẻ), vì trình duyệt chặn phát tiếng khi gọi trễ sau animation.
 function getResultAudio() {
-  if (!resultAudio) { resultAudio = new Audio(); resultAudio.preload = 'auto'; }
+  if (!resultAudio) {
+    resultAudio = new Audio();
+    resultAudio.preload = 'auto';
+    resultAudio.setAttribute('playsinline', '');
+  }
   return resultAudio;
 }
-document.addEventListener('pointerdown', () => unlockResultAudio(), { once: true, capture: true });
-function unlockResultAudio() {
-  try {
-    const a = getResultAudio();
-    if (!a.paused || a.dataset.unlocked) return;
-    a.src = SILENT_WAV;
-    a.play().then(() => { a.pause(); a.dataset.unlocked = '1'; }).catch(() => {});
-  } catch (e) {}
+function musicUrl(track) {
+  return (window.TNAG_API_BASE || '').replace(/\/+$/, '') + '/uploads/music/' + encodeURIComponent(track.file);
+}
+function musicRange(track) {
+  const start = Number(track.start) || 0;
+  const end = track.end != null && Number(track.end) > start ? Number(track.end) : null;
+  return { start, end };
+}
+// Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên)
+function pickMusicTrack(group) {
+  let list = [];
+  try { list = (JSON.parse(localStorage.getItem('tnag_music') || 'null') || {})[group] || []; } catch (e) {}
+  if (!list.length) return null;
+  const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile[group]) : list;
+  const track = pool[Math.floor(Math.random() * pool.length)];
+  lastTrackFile[group] = track.file;
+  return track;
 }
 
-// ---- Nhạc MP3 do admin cài: quẻ → bài ngẫu nhiên trong nhóm "que", vòng quay → nhóm "wheel" ----
-function playResultMusic(group) {
-  stopResultMusic();
+function prepareResultMusic(group) {
   try {
     if (sound.isMuted()) return;
-    const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
-    const list = m[group] || [];
-    if (!list.length) return;
-    // Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên)
-    const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile[group]) : list;
-    const track = pool[Math.floor(Math.random() * pool.length)];
-    lastTrackFile[group] = track.file;
-    const base = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
+    if (preparedTrack && preparedTrack.group === group) return; // đã chuẩn bị trong cú bấm trước đó
+    const track = pickMusicTrack(group);
+    if (!track) return;
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    stopResultMusic();
+    preparedTrack = { group, track };
+    const token = ++resultPlayToken;
     const a = getResultAudio();
-    const start = Number(track.start) || 0;
-    const end = track.end != null && Number(track.end) > start ? Number(track.end) : null;
-    a.src = base + '/uploads/music/' + encodeURIComponent(track.file);
-    a.volume = 0.8;
-    if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
+    const { start } = musicRange(track);
+    a.src = musicUrl(track);
+    a.muted = true;
+    if (start > 0) a.addEventListener('loadedmetadata', () => { if (a.muted) a.currentTime = start; }, { once: true });
+    const p = a.play();
+    if (p) p.then(() => { if (token === resultPlayToken && a.muted) a.pause(); }).catch(() => {});
+  } catch (e) { console.warn('[music]', e); }
+}
+
+function playResultMusic(group) {
+  try {
+    if (sound.isMuted()) { preparedTrack = null; return; }
+    const a = getResultAudio();
+    let track;
+    if (preparedTrack && preparedTrack.group === group) {
+      track = preparedTrack.track;            // bài đã gán src + "play" trong cú bấm
+    } else {
+      track = pickMusicTrack(group);          // không có bước chuẩn bị (vd. mở từ link/catalog)
+      if (!track) return;
+      a.src = musicUrl(track);
+    }
+    preparedTrack = null;
+    const token = ++resultPlayToken;
+    const { start, end } = musicRange(track);
+    if (resultTimeHandler) a.removeEventListener('timeupdate', resultTimeHandler);
     resultTimeHandler = end ? () => { if (a.currentTime >= end) a.pause(); } : null;
     if (resultTimeHandler) a.addEventListener('timeupdate', resultTimeHandler);
+    a.muted = false;
+    a.volume = 0.8;
+    if (a.readyState >= 1) { if (Math.abs(a.currentTime - start) > 0.5) a.currentTime = start; }
+    else if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
     a.play().catch(err => {
-      console.warn('[music] Không phát được nhạc:', err);
-      // Bị trình duyệt (mobile) chặn: thử lại ngay ở lần chạm kế tiếp của người dùng
-      const retry = () => { if (a.src && a.paused && a === resultAudio) a.play().catch(() => {}); };
-      document.addEventListener('pointerdown', retry, { once: true, capture: true });
+      if (token !== resultPlayToken) return;
+      console.warn('[music] Audio bị chặn, chuyển sang Web Audio:', err);
+      playMusicViaWebAudio(track, token);
     });
   } catch (e) { console.warn('[music]', e); }
 }
+
+function playMusicViaWebAudio(track, token) {
+  sound.init();
+  const ctx = sound.ctx;
+  if (!ctx) return;
+  const { start, end } = musicRange(track);
+  fetch(musicUrl(track))
+    .then(r => r.arrayBuffer())
+    .then(buf => new Promise((res, rej) => ctx.decodeAudioData(buf, res, rej)))
+    .then(audioBuf => {
+      if (token !== resultPlayToken) return;   // người dùng đã đóng popup / quay lượt khác
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.8;
+      src.buffer = audioBuf;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      const offset = Math.min(start, Math.max(0, audioBuf.duration - 0.1));
+      if (end) src.start(0, offset, end - offset); else src.start(0, offset);
+      resultSource = src;
+    })
+    .catch(err => console.warn('[music] Web Audio cũng lỗi:', err));
+}
+
 function stopResultMusic() {
+  resultPlayToken++;
+  if (resultSource) { try { resultSource.stop(); } catch (e) {} resultSource = null; }
   if (!resultAudio) return;
   resultAudio.pause();
   if (resultTimeHandler) { resultAudio.removeEventListener('timeupdate', resultTimeHandler); resultTimeHandler = null; }
@@ -1764,6 +1818,9 @@ function setupEventListeners() {
   DOM.btnSpinAgain.addEventListener('click', () => {
     window.TNAG_TRACKER.log('SPIN_AGAIN', 'Quay/xin lại lần nữa');
     closeResultModal();
+    // Chuẩn bị nhạc ngay trong cú bấm (iPhone chặn nếu chỉ gọi sau setTimeout)
+    sound.init();
+    prepareResultMusic(state.theme === 'ket-hoi-tho-lun' ? 'wheel' : 'que');
     if (state.theme === 'ket-hoi-tho-lun') {
       setTimeout(() => spinCircularWheel(), 250);
     } else {
