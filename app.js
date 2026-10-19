@@ -1143,7 +1143,9 @@ function getPoolWithFallback() {
 
 // Đổi ngân sách → nạp lại vòng quay bằng các món đúng tầm giá (tối đa 12 món, xáo ngẫu nhiên)
 function syncWheelToBudget() {
-  const pool = getBudgetPool(2);
+  // Ưu tiên đủ 4 món cho vòng quay đẹp (mở rộng sang danh mục khác cùng tầm giá nếu cần)
+  let pool = getBudgetPool(4);
+  if (pool.length < 2) pool = getBudgetPool(2);
   if (pool.length < 2) {
     showToast('Không đủ món trong tầm giá này để quay, vòng quay giữ nguyên.');
     return;
