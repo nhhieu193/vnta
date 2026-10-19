@@ -1100,20 +1100,37 @@ function applyTheme(newTheme, updateUrl = true) {
 // ==========================================
 // FILTER LOGIC
 // ==========================================
+function matchesBudget(dish, budget = state.budget) {
+  if (budget === '35k') return dish.price <= 35000;
+  if (budget === '50k') return dish.price >= 35000 && dish.price <= 60000;
+  if (budget === '70k') return dish.price >= 60000 && dish.price <= 85000;
+  if (budget === '100k') return dish.price >= 85000;
+  return true;
+}
+
 function getFilteredDishes() {
   return DISHES.filter(dish => {
     if (dish.category !== state.category) return false;
     if (state.isVegetarian && !dish.isVegetarian) return false;
-    if (state.budget === '35k' && dish.price > 35000) return false;
-    if (state.budget === '50k' && (dish.price < 35000 || dish.price > 60000)) return false;
-    if (state.budget === '70k' && (dish.price < 60000 || dish.price > 85000)) return false;
-    if (state.budget === '100k' && dish.price < 85000) return false;
-    return true;
+    return matchesBudget(dish);
   });
 }
 
+// Pool món theo ngân sách. Ngân sách được giữ cứng: nếu danh mục hiện tại không đủ món trong
+// tầm giá thì mở rộng sang danh mục khác nhưng VẪN đúng ngân sách, chỉ khi cả kho không có món
+// nào trong tầm giá mới bỏ qua ngân sách.
+function getBudgetPool(minCount = 1) {
+  const veg = d => !state.isVegetarian || d.isVegetarian;
+  const steps = [
+    getFilteredDishes(),
+    DISHES.filter(d => matchesBudget(d) && veg(d)),
+    DISHES.filter(d => matchesBudget(d)),
+  ];
+  return steps.find(p => p.length >= minCount) || [];
+}
+
 function getPoolWithFallback() {
-  let pool = getFilteredDishes();
+  let pool = getBudgetPool();
   if (pool.length === 0) {
     pool = DISHES.filter(d => d.category === state.category);
     if (state.isVegetarian) {
@@ -1122,6 +1139,20 @@ function getPoolWithFallback() {
     }
   }
   return pool.length > 0 ? pool : DISHES;
+}
+
+// Đổi ngân sách → nạp lại vòng quay bằng các món đúng tầm giá (tối đa 12 món, xáo ngẫu nhiên)
+function syncWheelToBudget() {
+  const pool = getBudgetPool(2);
+  if (pool.length < 2) {
+    showToast('Không đủ món trong tầm giá này để quay, vòng quay giữ nguyên.');
+    return;
+  }
+  state.wheelDishes = [...pool].sort(() => 0.5 - Math.random()).slice(0, 12);
+  saveWheelDishes();
+  renderWheelAndChips();
+  const label = DOM.budgetSelect.options[DOM.budgetSelect.selectedIndex].text;
+  showToast(`Đã đổi món theo ngân sách "${label}" (${state.wheelDishes.length} món)`);
 }
 
 function pickWeightedDish(pool) {
@@ -1701,6 +1732,7 @@ function setupEventListeners() {
   DOM.budgetSelect.addEventListener('change', (e) => {
     state.budget = e.target.value;
     window.TNAG_TRACKER.log('CHANGE_BUDGET', 'Đổi ngân sách: ' + e.target.value);
+    if (!state.isSpinning) syncWheelToBudget();
   });
 
   // Vegetarian Checkbox
