@@ -469,7 +469,7 @@ function savePlanEntry(plan) {
 const state = {
   theme: 'ket-hoi-tho-lun',
   category: 'main',
-  budget: '50k',
+  budget: '100k', // mặc định: món đắt nhất (100k+ Thượng hạng)
   isVegetarian: false,
   isSpinning: false,
   queState: 'idle', // 'idle' | 'shaking' | 'ready'
@@ -617,7 +617,9 @@ function init() {
   }
 
   // Load initial dishes onto wheel
+  if (DOM.budgetSelect) DOM.budgetSelect.value = state.budget; // tránh trình duyệt tự khôi phục lựa chọn cũ
   loadInitialWheelDishes();
+  syncWheelToBudget(true); // vòng quay khớp ngân sách mặc định ngay khi mở trang
 
   // Check URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -1142,17 +1144,18 @@ function getPoolWithFallback() {
 }
 
 // Đổi ngân sách → nạp lại vòng quay bằng các món đúng tầm giá (tối đa 12 món, xáo ngẫu nhiên)
-function syncWheelToBudget() {
+function syncWheelToBudget(silent = false) {
   // Ưu tiên đủ 4 món cho vòng quay đẹp (mở rộng sang danh mục khác cùng tầm giá nếu cần)
   let pool = getBudgetPool(4);
   if (pool.length < 2) pool = getBudgetPool(2);
   if (pool.length < 2) {
-    showToast('Không đủ món trong tầm giá này để quay, vòng quay giữ nguyên.');
+    if (!silent) showToast('Không đủ món trong tầm giá này để quay, vòng quay giữ nguyên.');
     return;
   }
   state.wheelDishes = [...pool].sort(() => 0.5 - Math.random()).slice(0, 12);
   saveWheelDishes();
   renderWheelAndChips();
+  if (silent) return;
   const label = DOM.budgetSelect.options[DOM.budgetSelect.selectedIndex].text;
   showToast(`Đã đổi món theo ngân sách "${label}" (${state.wheelDishes.length} món)`);
 }
