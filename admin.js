@@ -1026,7 +1026,11 @@ function renderBgMusic(m) {
   box.innerHTML = bg.tracks.length ? bg.tracks.map((t, i) => `
       <div class="music-item">
         <span class="music-name">${i + 1}. ${escapeHtml(t.name)}</span>
-        <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}"></audio>
+        <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}" data-bg-audio="${escapeHtml(t.file)}"></audio>
+        <span class="music-range">Phát từ
+          <input type="number" min="0" step="1" class="bg-start" data-bg-file="${escapeHtml(t.file)}" value="${t.start == null ? '' : t.start}" placeholder="0" /> đến
+          <input type="number" min="0" step="1" class="bg-end" data-bg-file="${escapeHtml(t.file)}" value="${t.end == null ? '' : t.end}" placeholder="hết bài" /> giây
+        </span>
         <button type="button" class="btn-delete-user" data-bg-file="${escapeHtml(t.file)}">🗑 Xóa</button>
       </div>`).join('') : '<p class="panel-desc">Chưa có bài nhạc nền nào.</p>';
 }
@@ -1127,6 +1131,38 @@ function setupBgMusicEvents() {
     });
   }
   const box = document.getElementById('music-bg-list');
+  // Lưu đoạn phát (giây bắt đầu / kết thúc) của từng bài nhạc nền
+  if (box) box.addEventListener('change', (e) => {
+    const inp = e.target.closest('.bg-start, .bg-end');
+    if (!inp) return;
+    const m = getMusic();
+    const t = m.bg.tracks.find(x => x.file === inp.dataset.bgFile);
+    if (!t) return;
+    const v = inp.value === '' ? null : Math.max(0, Number(inp.value));
+    t[inp.classList.contains('bg-start') ? 'start' : 'end'] = v;
+    if (t.start != null && t.end != null && t.end <= t.start) { showAdminToast('Giây kết thúc phải lớn hơn giây bắt đầu', 'error'); renderMusicTab(); return; }
+    saveMusic(m);
+    showAdminToast('Đã lưu đoạn phát nhạc nền');
+  });
+  // Nghe thử đúng đoạn đã chọn
+  const bgTrackOf = (a) => getMusic().bg.tracks.find(x => x.file === a.dataset.bgAudio);
+  if (box) box.addEventListener('play', (e) => {
+    const a = e.target;
+    if (a.tagName !== 'AUDIO' || !a.dataset.bgAudio) return;
+    const t = bgTrackOf(a);
+    const start = t && Number(t.start) || 0;
+    const end = t && t.end != null ? Number(t.end) : null;
+    if (a.currentTime < start || (end && a.currentTime >= end)) a.currentTime = start;
+  }, true);
+  if (box) box.addEventListener('timeupdate', (e) => {
+    const a = e.target;
+    if (a.tagName !== 'AUDIO' || !a.dataset.bgAudio || a.paused) return;
+    const t = bgTrackOf(a);
+    if (t && t.end != null && Number(t.end) > (Number(t.start) || 0) && a.currentTime >= Number(t.end)) {
+      a.pause();
+      a.currentTime = Number(t.start) || 0;
+    }
+  }, true);
   if (box) box.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-bg-file]');
     if (!btn) return;

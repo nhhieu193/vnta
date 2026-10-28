@@ -1424,6 +1424,8 @@ const bgMusic = (function () {
   let fadeTimer = null;
   let wanted = false;      // người dùng đang ở trạng thái "nên có nhạc nền"
   let lastFile = null;
+  let current = null;      // bài đang phát (để biết đoạn giây bắt đầu / kết thúc)
+  let switching = false;
 
   function settings() {
     try {
@@ -1446,6 +1448,15 @@ const bgMusic = (function () {
       audio.setAttribute('playsinline', '');
       // Hết bài → phát bài khác trong danh sách (1 bài thì lặp lại)
       audio.addEventListener('ended', () => { if (wanted) playTrack(true); });
+      // Hết đoạn admin chọn (giây kết thúc) → tắt dần rồi sang bài tiếp theo
+      audio.addEventListener('timeupdate', () => {
+        if (!current || switching || audio.paused) return;
+        const { end } = musicRange(current);
+        if (end && audio.currentTime >= end) {
+          switching = true;
+          fadeTo(0, 800, () => { switching = false; if (wanted && !busy()) playTrack(true); else audio.pause(); });
+        }
+      });
     }
     return audio;
   }
@@ -1465,9 +1476,15 @@ const bgMusic = (function () {
     const s = settings();
     if (!s.enabled || sound.isMuted()) return;
     const a = getAudio();
-    if (next || !a.src) {
-      const t = pickNext(s.tracks);
-      a.src = musicUrl(t);
+    if (next || !a.src || !current) {
+      current = pickNext(s.tracks);
+      a.src = musicUrl(current);
+      const { start } = musicRange(current);
+      if (start > 0) a.addEventListener('loadedmetadata', () => { a.currentTime = start; }, { once: true });
+    } else {
+      // Phát tiếp: nếu đang nằm ngoài đoạn đã chọn thì quay về giây bắt đầu
+      const { start, end } = musicRange(current);
+      if (a.readyState >= 1 && (a.currentTime < start || (end && a.currentTime >= end))) a.currentTime = start;
     }
     a.volume = 0;
     a.play().then(() => fadeTo(s.volume, 1200)).catch(err => console.warn('[bgm] Chưa phát được nhạc nền:', err));
