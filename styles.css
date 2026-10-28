@@ -3201,3 +3201,14 @@ html, body { overflow-x: clip; }
 /* Ô "Nhập tên món mới" không đẩy nút "+ Thêm món" ra ngoài màn hình nhỏ */
 .add-dish-input { min-width: 0; }
 .btn-add-dish { flex-shrink: 0; white-space: nowrap; }
+
+/* Nhãn món chay dễ hiểu (thay ký hiệu ô vuông/tam giác đỏ kiểu Ấn Độ dễ bị hiểu nhầm là "cảnh báo") */
+.veg-pill {
+  background: rgba(6, 78, 59, 0.85); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.6);
+  padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+/* Nút 💖 nổi ở góc: nhỏ & trong hơn trên điện thoại để không che nút / thẻ món */
+@media (max-width: 480px) {
+  .heart-source-btn { width: 38px; height: 38px; font-size: 1.05rem; opacity: 0.75; }
+}

@@ -49,7 +49,13 @@ const app = express();
 app.use(cors({
   origin: ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : true
 }));
-app.use(express.json());
+// Dữ liệu lưu dạng chuỗi JSON lớn (kho món, log 500 dòng...) — mặc định 100kb của express quá nhỏ,
+// vượt quá thì lệnh lưu bị từ chối (413) và dữ liệu không lên server.
+app.use(express.json({ limit: '5mb' }));
+
+// Express 4 không tự bắt lỗi của hàm async (vd. MySQL mất kết nối) → bọc lại để trả 500
+// thay vì làm sập cả server.
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // JSON body không hợp lệ -> trả lỗi gọn, không lộ stack trace/đường dẫn server
 app.use((err, req, res, next) => {
@@ -69,20 +75,20 @@ app.use('/api/kv', (req, res, next) => {
 });
 
 // Toàn bộ key/value hiện có, dùng để hydrate localStorage khi trang tải lên
-app.get('/api/kv', async (req, res) => {
+app.get('/api/kv', wrap(async (req, res) => {
   const [rows] = await pool.query('SELECT `key`, value FROM kv_store');
   const result = {};
   rows.forEach((row) => { result[row.key] = row.value; });
   res.json(result);
-});
+}));
 
-app.get('/api/kv/:key', async (req, res) => {
+app.get('/api/kv/:key', wrap(async (req, res) => {
   const [rows] = await pool.query('SELECT value FROM kv_store WHERE `key` = ?', [req.params.key]);
   if (!rows.length) return res.status(404).json({ error: 'not_found' });
   res.json({ key: req.params.key, value: rows[0].value });
-});
+}));
 
-app.put('/api/kv/:key', async (req, res) => {
+app.put('/api/kv/:key', wrap(async (req, res) => {
   const { value } = req.body || {};
   if (typeof value !== 'string') {
     return res.status(400).json({ error: 'value phải là chuỗi (JSON.stringify trước khi gửi)' });
@@ -93,12 +99,44 @@ app.put('/api/kv/:key', async (req, res) => {
     [req.params.key, value]
   );
   res.json({ ok: true });
-});
+}));
 
-app.delete('/api/kv/:key', async (req, res) => {
+// Nối thêm dòng vào một mảng JSON (log hành động, kế hoạch đã chốt) thay vì ghi đè cả mảng,
+// để nhiều thiết bị cùng ghi không xóa mất dữ liệu của nhau.
+app.post('/api/kv/:key/append', wrap(async (req, res) => {
+  const { items, max } = req.body || {};
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'items phải là mảng' });
+  const limit = Math.min(Math.max(parseInt(max, 10) || 500, 1), 5000);
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.query('SELECT value FROM kv_store WHERE `key` = ? FOR UPDATE', [req.params.key]);
+    let list = [];
+    if (rows.length) {
+      try { const v = JSON.parse(rows[0].value); if (Array.isArray(v)) list = v; } catch (e) {}
+    }
+    const seen = new Set(list.map((x) => JSON.stringify(x)));
+    items.forEach((x) => { const k = JSON.stringify(x); if (!seen.has(k)) { seen.add(k); list.push(x); } });
+    if (list.length > limit) list = list.slice(list.length - limit);
+    await conn.query(
+      `INSERT INTO kv_store (\`key\`, value, updated_at) VALUES (?, ?, NOW())
+       ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)`,
+      [req.params.key, JSON.stringify(list)]
+    );
+    await conn.commit();
+    res.json({ ok: true, count: list.length });
+  } catch (err) {
+    await conn.rollback().catch(() => {});
+    throw err;
+  } finally {
+    conn.release();
+  }
+}));
+
+app.delete('/api/kv/:key', wrap(async (req, res) => {
   await pool.query('DELETE FROM kv_store WHERE `key` = ?', [req.params.key]);
   res.json({ ok: true });
-});
+}));
 
 // ---- Nhạc MP3 (admin tải lên, lưu trên đĩa VPS; danh sách lưu trong kv_store key tnag_music) ----
 const MUSIC_DIR = path.join(__dirname, 'uploads', 'music');
@@ -129,8 +167,24 @@ app.delete('/api/music/:file', requireApiKey, (req, res) => {
 
 app.use('/uploads/music', express.static(MUSIC_DIR));
 
-// Phục vụ file tĩnh của site (index.html, admin.html, app.js, css, data/...)
-app.use(express.static(__dirname));
+// Chỉ phục vụ đúng các file của trang web. KHÔNG mở cả thư mục dự án, vì trong đó có
+// .env (mật khẩu MySQL, API_KEY), .git, server.js, node_modules... ai cũng tải được.
+const PUBLIC_FILE = /^\/(index\.html|admin\.html|(app|admin|audio|config|hydrate)\.js|(styles|admin)\.css|data\/[a-z0-9_-]+\.js|favicon\.ico)$/i;
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.use((req, res, next) => {
+  if ((req.method === 'GET' || req.method === 'HEAD') && PUBLIC_FILE.test(req.path)) {
+    return res.sendFile(path.join(__dirname, req.path));
+  }
+  next();
+});
+
+app.use((req, res) => res.status(404).json({ error: 'not_found' }));
+// Lỗi không lường trước (vd. MySQL mất kết nối) → trả 500 gọn, server vẫn chạy tiếp
+app.use((err, req, res, next) => {
+  console.error('[server]', err && err.message);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'server_error' });
+});
 
 initDb()
   .then(() => {

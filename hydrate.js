@@ -15,11 +15,41 @@
     'tnag_music'
   ];
 
+  // Các key dạng "nhật ký" mà nhiều thiết bị cùng ghi thêm (điện thoại người dùng + máy admin).
+  // Không ghi đè cả mảng (thiết bị nào lưu sau sẽ xóa mất dòng của thiết bị kia), mà chỉ gửi
+  // các dòng MỚI thêm lên để server nối vào. Giá trị = số dòng tối đa server giữ lại.
+  var APPEND_KEYS = {
+    tnag_user_actions: 500,
+    tnag_plans: 500
+  };
+
   // API_BASE trống = cùng domain (relative path). Khai báo window.TNAG_API_BASE trong
   // config.js nếu frontend và API chạy khác domain.
   var API_BASE = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
   // Khớp với API_KEY trên server (nếu có cấu hình) để tránh người lạ gọi thẳng API.
   var API_KEY = window.TNAG_API_KEY || '';
+
+  var nativeSetItem = Storage.prototype.setItem;
+  var nativeRemoveItem = Storage.prototype.removeItem;
+
+  // Giá trị lần cuối đã khớp với server của từng key, để tính các dòng mới cần gửi
+  var lastSynced = {};
+
+  function headers(json) {
+    var h = {};
+    if (json) h['Content-Type'] = 'application/json';
+    if (API_KEY) h['X-API-Key'] = API_KEY;
+    return h;
+  }
+
+  function reportError(key, err) {
+    console.warn('[hydrate] Không lưu được "' + key + '" lên server:', err);
+    try { window.dispatchEvent(new CustomEvent('tnag-sync-error', { detail: { key: key } })); } catch (e) {}
+  }
+
+  function parseArray(str) {
+    try { var v = JSON.parse(str || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
 
   // 1) Kéo dữ liệu mới nhất từ server về localStorage (đồng bộ, chặn tải trang
   //    một chút để đảm bảo code chạy sau đọc được dữ liệu đã đồng bộ).
@@ -39,7 +69,11 @@
       var data = JSON.parse(xhr.responseText);
       SYNC_KEYS.forEach(function (key) {
         if (Object.prototype.hasOwnProperty.call(data, key)) {
-          localStorage.setItem(key, data[key]);
+          nativeSetItem.call(window.localStorage, key, data[key]);
+          lastSynced[key] = data[key];
+        } else {
+          // Server chưa có key này: dòng cũ còn trong máy (nếu có) coi như chưa gửi
+          lastSynced[key] = APPEND_KEYS[key] ? '[]' : null;
         }
       });
       syncEnabled = true;
@@ -51,30 +85,71 @@
     console.warn('[hydrate] Không kết nối được server — tắt đồng bộ ghi trong phiên này, chỉ dùng dữ liệu local.');
   }
 
+  function pushAppend(key, value) {
+    // Chỉ gửi những dòng chưa có trong bản đã khớp với server
+    var seen = {};
+    parseArray(lastSynced[key]).forEach(function (item) { seen[JSON.stringify(item)] = true; });
+    var items = parseArray(value).filter(function (item) { return !seen[JSON.stringify(item)]; });
+    lastSynced[key] = value;
+    if (!items.length) return;
+    fetch(API_BASE + '/api/kv/' + encodeURIComponent(key) + '/append', {
+      method: 'POST',
+      headers: headers(true),
+      body: JSON.stringify({ items: items, max: APPEND_KEYS[key] })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    }).catch(function (err) { reportError(key, err); });
+  }
+
+  function pushReplace(key, value) {
+    lastSynced[key] = value;
+    fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), {
+      method: 'PUT',
+      headers: headers(true),
+      body: JSON.stringify({ value: value })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    }).catch(function (err) { reportError(key, err); });
+  }
+
   // 2) Ghi đè setItem/removeItem để mọi thay đổi được đẩy lên server
   //    (chỉ khi bước 1 ở trên thành công, xem giải thích phía trên).
-  var nativeSetItem = Storage.prototype.setItem;
-  var nativeRemoveItem = Storage.prototype.removeItem;
-
   Storage.prototype.setItem = function (key, value) {
     nativeSetItem.apply(this, arguments);
     if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
-      var headers = { 'Content-Type': 'application/json' };
-      if (API_KEY) headers['X-API-Key'] = API_KEY;
-      fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify({ value: value })
-      }).catch(function () {});
+      if (APPEND_KEYS[key]) pushAppend(key, String(value));
+      else pushReplace(key, String(value));
     }
   };
 
   Storage.prototype.removeItem = function (key) {
     nativeRemoveItem.apply(this, arguments);
     if (syncEnabled && this === window.localStorage && SYNC_KEYS.indexOf(key) !== -1) {
-      var headers = {};
-      if (API_KEY) headers['X-API-Key'] = API_KEY;
-      fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), { method: 'DELETE', headers: headers }).catch(function () {});
+      lastSynced[key] = APPEND_KEYS[key] ? '[]' : null;
+      fetch(API_BASE + '/api/kv/' + encodeURIComponent(key), { method: 'DELETE', headers: headers(false) })
+        .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); })
+        .catch(function (err) { reportError(key, err); });
+    }
+  };
+
+  // 3) Cho trang admin kéo lại dữ liệu mới nhất (vd. bấm "Làm mới" để thấy log / kế hoạch
+  //    mà điện thoại người dùng vừa gửi lên), không cần tải lại cả trang.
+  window.TNAG_SYNC = {
+    enabled: syncEnabled,
+    refresh: function (keys) {
+      if (!syncEnabled) return Promise.resolve(false);
+      return fetch(API_BASE + '/api/kv', { headers: headers(false), cache: 'no-store' })
+        .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+        .then(function (data) {
+          (keys || SYNC_KEYS).forEach(function (key) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+              nativeSetItem.call(window.localStorage, key, data[key]);
+              lastSynced[key] = data[key];
+            }
+          });
+          return true;
+        })
+        .catch(function (err) { console.warn('[hydrate] Làm mới thất bại:', err); return false; });
     }
   };
 })();

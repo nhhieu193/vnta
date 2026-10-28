@@ -774,7 +774,7 @@ function renderChips() {
 
     chip.innerHTML = `
       <span class="chip-color-dot" style="background-color: ${color};"></span>
-      <span class="chip-name" title="${dish.name}">${dish.name}</span>
+      <span class="chip-name" title="${escapeHtmlAttr(dish.name)}">${escapeHtmlAttr(dish.name)}</span>
       <button type="button" class="chip-del-btn" data-index="${idx}" title="Xóa món này khỏi vòng quay">&times;</button>
     `;
 
@@ -1611,10 +1611,10 @@ function renderCatalog(dishes) {
     const deliveryTime = 20 + (idx % 4) * 5;
 
     card.innerHTML = `
-      <div class="catalog-img-wrap" data-emoji="${dish.emoji || '🍲'}">
-        <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.classList.add('img-fallback'); this.style.visibility='hidden';" />
+      <div class="catalog-img-wrap" data-emoji="${escapeHtmlAttr(dish.emoji || '🍲')}">
+        <img src="${escapeHtmlAttr(dish.image)}" alt="${escapeHtmlAttr(dish.name)}" loading="lazy" onerror="this.onerror=null; this.parentElement.classList.add('img-fallback'); this.style.visibility='hidden';" />
         <div class="catalog-tag-overlay">
-          <span class="${dish.isVegetarian ? 'swiggy-veg-icon' : 'swiggy-nonveg-icon'}" title="${dish.isVegetarian ? 'Món Chay' : 'Món Mặn'}"></span>
+          ${dish.isVegetarian ? '<span class="veg-pill" title="Món chay">🌱 Chay</span>' : '<span></span>'}
           <span class="delivery-time-badge">⚡ ${deliveryTime} PHÚT</span>
         </div>
       </div>
@@ -1622,12 +1622,12 @@ function renderCatalog(dishes) {
         <div>
           <div class="catalog-meta-row">
             <span class="rating-badge">★ ${rating}</span>
-            <span class="catalog-meta">${dish.categoryName} • ${dish.origin}</span>
+            <span class="catalog-meta">${escapeHtmlAttr(dish.categoryName || '')} • ${escapeHtmlAttr(dish.origin || '')}</span>
           </div>
-          <h3 class="catalog-dish-title">${dish.name}</h3>
+          <h3 class="catalog-dish-title">${escapeHtmlAttr(dish.name)}</h3>
         </div>
         <div class="catalog-price-row">
-          <span class="catalog-price">${dish.priceDisplay}</span>
+          <span class="catalog-price">${escapeHtmlAttr(dish.priceDisplay || '')}</span>
           <span class="order-link-text">Đặt món →</span>
         </div>
       </div>
@@ -1846,8 +1846,11 @@ function setupEventListeners() {
   }
 
   // Catalog search input
+  let searchLogTimer = null;
   DOM.catalogSearch.addEventListener('input', (e) => {
-    if (e.target.value.length > 0) window.TNAG_TRACKER.log('SEARCH_CATALOG', 'Tìm kiếm: ' + e.target.value);
+    clearTimeout(searchLogTimer);
+    const q = e.target.value.trim();
+    if (q) searchLogTimer = setTimeout(() => window.TNAG_TRACKER.log('SEARCH_CATALOG', 'Tìm kiếm: ' + q), 1000);
     handleCatalogSearch(e);
   });
 

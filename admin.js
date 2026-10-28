@@ -191,13 +191,13 @@ function switchTab(tabName) {
   });
   DOM.headerTitle.textContent = TAB_TITLES[tabName] || '';
 
-  if (tabName === 'tracking') renderTrackingTab();
+  if (tabName === 'tracking') { renderTrackingTab(); refreshFromServer(['tnag_user_actions'], renderTrackingTab); }
   if (tabName === 'food') renderFoodTab();
   if (tabName === 'users') renderUsersTab();
   if (tabName === 'popup') loadPopupSettings();
   if (tabName === 'uisettings') loadUiSettings();
   if (tabName === 'music') renderMusicTab();
-  if (tabName === 'plan') renderPlanTab();
+  if (tabName === 'plan') { renderPlanTab(); refreshFromServer(['tnag_plans'], () => { renderPlanTable(); renderPlanStats(); }); }
 
   // Close mobile sidebar
   DOM.sidebar.classList.remove('open');
@@ -258,8 +258,8 @@ function renderFoodTable(dishes) {
 
   DOM.foodTableBody.innerHTML = dishes.map(dish => `
     <tr>
-      <td style="color: var(--admin-text-dim); font-size: 0.78rem;">${dish.id}</td>
-      <td style="font-size: 1.4rem;">${dish.emoji}</td>
+      <td style="color: var(--admin-text-dim); font-size: 0.78rem;">${escapeHtml(dish.id)}</td>
+      <td style="font-size: 1.4rem;">${escapeHtml(dish.emoji || '')}</td>
       <td><strong>${escapeHtml(dish.name)}</strong></td>
       <td>${escapeHtml(dish.categoryName || dish.category)}</td>
       <td>${dish.priceDisplay}</td>
@@ -478,7 +478,7 @@ function renderTrackingTable() {
         <td style="color: var(--admin-text-dim); font-size: 0.78rem;">${actions.length - idx}</td>
         <td style="font-size: 0.82rem; white-space: nowrap;">${formatTimestamp(act.timestamp)}</td>
         <td><span class="action-badge action-${act.action}">${typeInfo.icon} ${typeInfo.label}</span></td>
-        <td style="font-size: 0.85rem; color: var(--admin-text-muted);">${act.detail || '—'}</td>
+        <td style="font-size: 0.85rem; color: var(--admin-text-muted);">${act.detail ? escapeHtml(act.detail) : '—'}</td>
       </tr>
     `;
   }).join('');
@@ -1290,12 +1290,12 @@ function renderPlanTable() {
     const d = new Date(p.timestamp);
     const timeStr = isNaN(d.getTime()) ? p.timestamp : d.toLocaleString('vi-VN');
     const activityText = p.activityLabel
-      ? `${p.activityLabel}${p.activityChoice ? ' — ' + escapeHtml(p.activityChoice) : ''}`
+      ? `${escapeHtml(p.activityLabel)}${p.activityChoice ? ' — ' + escapeHtml(p.activityChoice) : ''}`
       : '<span style="color: var(--admin-text-dim);">—</span>';
     return `
       <tr>
         <td>${plans.length - idx}</td>
-        <td style="font-size: 0.78rem; color: var(--admin-text-dim);">${timeStr}</td>
+        <td style="font-size: 0.78rem; color: var(--admin-text-dim);">${escapeHtml(timeStr)}</td>
         <td><strong>${escapeHtml(p.dishName || '')}</strong></td>
         <td>${escapeHtml(p.date || '')} ${escapeHtml(p.time || '')}</td>
         <td>${activityText}</td>
@@ -1387,7 +1387,7 @@ function setupEvents() {
 
   // Tracking tab: refresh
   if (DOM.trackingRefreshBtn) {
-    DOM.trackingRefreshBtn.addEventListener('click', renderTrackingTab);
+    DOM.trackingRefreshBtn.addEventListener('click', () => refreshFromServer(['tnag_user_actions'], renderTrackingTab, true));
   }
 
   // Tracking tab: clear all
@@ -1492,7 +1492,7 @@ function setupEvents() {
   }
 
   // Plan tab: submitted plans
-  if (DOM.planRefreshBtn) DOM.planRefreshBtn.addEventListener('click', renderPlanTable);
+  if (DOM.planRefreshBtn) DOM.planRefreshBtn.addEventListener('click', () => refreshFromServer(['tnag_plans'], () => { renderPlanTable(); renderPlanStats(); }, true));
   if (DOM.planClearBtn) {
     DOM.planClearBtn.addEventListener('click', () => {
       if (confirm('Bạn có chắc muốn xóa tất cả kế hoạch đã chốt? Thao tác này không thể hoàn tác.')) {
@@ -1508,7 +1508,37 @@ function setupEvents() {
 // ==========================================
 // INIT
 // ==========================================
+// Kéo dữ liệu mới nhất từ server (log / kế hoạch do điện thoại người dùng vừa gửi) rồi vẽ lại
+function refreshFromServer(keys, rerender, announce) {
+  if (!window.TNAG_SYNC || !window.TNAG_SYNC.enabled) {
+    rerender();
+    if (announce) showAdminToast('Không kết nối được server — đang xem dữ liệu trong máy này', 'error');
+    return;
+  }
+  window.TNAG_SYNC.refresh(keys).then((ok) => {
+    rerender();
+    if (announce) showAdminToast(ok ? 'Đã tải dữ liệu mới nhất' : 'Làm mới thất bại, thử lại sau', ok ? 'success' : 'error');
+  });
+}
+
+// Cảnh báo khi dữ liệu KHÔNG được lưu lên server (mọi thay đổi chỉ nằm trong trình duyệt này)
+function setupSyncWarnings() {
+  if (window.TNAG_SYNC && !window.TNAG_SYNC.enabled) {
+    const bar = document.createElement('div');
+    bar.className = 'sync-warning-bar';
+    bar.textContent = '⚠️ Không kết nối được server: thay đổi lúc này chỉ lưu trong trình duyệt này, KHÔNG đồng bộ cho người dùng. Hãy tải lại trang khi server hoạt động.';
+    document.body.prepend(bar);
+  }
+  let lastWarn = 0;
+  window.addEventListener('tnag-sync-error', () => {
+    if (Date.now() - lastWarn < 4000) return;
+    lastWarn = Date.now();
+    showAdminToast('Lưu lên server thất bại — kiểm tra kết nối rồi thử lại', 'error');
+  });
+}
+
 function init() {
+  setupSyncWarnings();
   if (!checkAdminSession()) return;
   renderFoodTab();
   renderTrackingTab();
