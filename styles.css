@@ -3166,3 +3166,38 @@ html, body { overflow-x: clip; }
 }
 /* Huy hiệu "6 món" không xuống dòng trên máy nhỏ */
 #wheel-count-badge { white-space: nowrap; flex-shrink: 0; }
+
+/* =========================================================
+   TABLET QA FIXES (iPad Mini 768 · iPad 810/834 · Galaxy Tab 712 · ngang 1024/1194)
+   ========================================================= */
+/* Vòng quay + bảng món: 2 cột co theo màn hình, vòng quay tự thu nhỏ thay vì đẩy bảng món ra ngoài */
+@media (min-width: 769px) {
+  .wheel-arena-wrapper { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .wheel-stage, .dish-manager-panel { min-width: 0; }
+  .circular-wheel-frame { max-width: 100%; height: auto; aspect-ratio: 1 / 1; }
+  #wheel-canvas { width: 100%; height: 100%; }
+}
+/* Tablet dọc (đang dùng bố cục mobile): vòng quay to hơn 320px cho đỡ trống */
+@media (min-width: 560px) and (max-width: 768px) {
+  .circular-wheel-frame {
+    width: 420px; height: 420px;
+    max-width: calc(100vw - 32px); max-height: calc(100vw - 32px);
+  }
+  /* Đã có thanh điều hướng dưới → bỏ nút "Thực đơn" trùng trên header */
+  .header-right .global-stats-btn { display: none; }
+}
+
+/* Màn hình cảm ứng (tablet ở bố cục desktop): vùng chạm tối thiểu ~40–44px */
+@media (pointer: coarse) {
+  .chip-del-btn { min-width: 36px; min-height: 36px; margin: -4px -10px -4px -4px; font-size: 1.15rem; }
+  .quick-act-btn, .cat-btn, .theme-btn { min-height: 42px; }
+  .sound-toggle-btn, .user-logout-btn, .global-stats-btn, .user-pill-badge { min-height: 42px; }
+  .user-logout-btn { min-width: 42px; }
+  .close-modal-btn { width: 42px !important; height: 42px !important; flex-shrink: 0; }
+  .plan-chip { min-height: 44px; }
+  .veg-filter-label input[type="checkbox"] { width: 20px; height: 20px; }
+  .wheel-chip { min-height: 40px; }
+}
+/* Ô "Nhập tên món mới" không đẩy nút "+ Thêm món" ra ngoài màn hình nhỏ */
+.add-dish-input { min-width: 0; }
+.btn-add-dish { flex-shrink: 0; white-space: nowrap; }

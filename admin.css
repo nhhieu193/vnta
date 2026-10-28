@@ -1213,3 +1213,23 @@ html, body { overflow-x: clip; }
   .admin-header > * { min-width: 0; }
 }
 @media (max-width: 480px) { .admin-header .user-greeting { display: none; } }
+
+/* =========================================================
+   TABLET QA FIXES
+   ========================================================= */
+/* Form nhiều ô (thêm món / user / quán / phim): tự xuống hàng theo chiều rộng thay vì cố 4 cột rồi tràn */
+.user-form-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.user-form-grid > * { min-width: 0; }
+.user-form-grid input, .user-form-grid select { width: 100%; min-width: 0; }
+.form-btn-group .save-btn { width: 100%; }
+/* 2 bảng cạnh nhau (Kế hoạch, Popup) chỉ khi đủ rộng */
+@media (max-width: 1280px) { .popup-settings-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Màn hình cảm ứng: vùng chạm tối thiểu */
+@media (pointer: coarse) {
+  .chip { min-height: 40px; }
+  .btn-toggle-eye-row { min-width: 40px; min-height: 40px; }
+  #dish-veg { width: 20px !important; height: 20px; }
+  .search-wrap { padding: 0 14px; }
+  .search-wrap input { min-height: 44px; }
+}
