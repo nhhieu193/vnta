@@ -987,18 +987,25 @@ function saveUiSettings() {
 // ==========================================
 const MUSIC_API = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
 
+// Nhạc nền: { enabled, volume (0–1), tracks: [{ name, file }] }
+function normalizeBg(bg) {
+  bg = bg || {};
+  const vol = Number(bg.volume);
+  return { enabled: !!bg.enabled, volume: isFinite(vol) && vol > 0 ? Math.min(vol, 1) : 0.3, tracks: Array.isArray(bg.tracks) ? bg.tracks : [] };
+}
+
 // Một danh sách nhạc dùng chung cho quẻ + vòng quay: { all: [...], priority: '<file>' }.
 // priority = bài phát cho kết quả ĐẦU TIÊN sau mỗi lần người dùng đăng nhập (quay hoặc gieo quẻ).
 // Dữ liệu cũ tách 2 nhóm { que, wheel } được gộp lại (bỏ bài ở nhóm vòng quay trùng tên với nhóm quẻ).
 function getMusic() {
   try {
     const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
-    if (Array.isArray(m.all)) return { all: m.all, priority: m.priority || null };
+    if (Array.isArray(m.all)) return { all: m.all, priority: m.priority || null, bg: normalizeBg(m.bg) };
     const que = m.que || [], wheel = m.wheel || [];
     const names = new Set(que.map(t => t.name));
-    return { all: que.concat(wheel.filter(t => !names.has(t.name))), legacy: !!(m.que || m.wheel) };
+    return { all: que.concat(wheel.filter(t => !names.has(t.name))), priority: null, bg: normalizeBg(m.bg), legacy: !!(m.que || m.wheel) };
   } catch (e) {
-    return { all: [] };
+    return { all: [], priority: null, bg: normalizeBg() };
   }
 }
 
@@ -1006,8 +1013,27 @@ function saveMusic(m) {
   localStorage.setItem('tnag_music', JSON.stringify(m));
 }
 
+function renderBgMusic(m) {
+  const box = document.getElementById('music-bg-list');
+  if (!box) return;
+  const bg = m.bg || normalizeBg();
+  const en = document.getElementById('bgm-enabled');
+  const vol = document.getElementById('bgm-volume');
+  const volText = document.getElementById('bgm-volume-text');
+  if (en) en.checked = bg.enabled;
+  if (vol) vol.value = Math.round(bg.volume * 100);
+  if (volText) volText.textContent = Math.round(bg.volume * 100) + '%';
+  box.innerHTML = bg.tracks.length ? bg.tracks.map((t, i) => `
+      <div class="music-item">
+        <span class="music-name">${i + 1}. ${escapeHtml(t.name)}</span>
+        <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}"></audio>
+        <button type="button" class="btn-delete-user" data-bg-file="${escapeHtml(t.file)}">🗑 Xóa</button>
+      </div>`).join('') : '<p class="panel-desc">Chưa có bài nhạc nền nào.</p>';
+}
+
 function renderMusicTab() {
   const m = getMusic();
+  renderBgMusic(m);
   if (m.legacy) { delete m.legacy; saveMusic(m); }
   [['all', 'music-all-list']].forEach(([group, id]) => {
     const box = document.getElementById(id);
@@ -1031,6 +1057,33 @@ function renderMusicTab() {
   });
 }
 
+// Tải file MP3 lên server, trả về tên file đã lưu
+async function uploadMp3(f) {
+  const headers = { 'Content-Type': 'audio/mpeg' };
+  if (window.TNAG_API_KEY) headers['X-API-Key'] = window.TNAG_API_KEY;
+  const res = await fetch(MUSIC_API + '/api/music?name=' + encodeURIComponent(f.name), { method: 'POST', headers, body: f });
+  const data = await res.json().catch(() => ({ error: 'Server chưa hỗ trợ tải nhạc (cần cập nhật server.js)' }));
+  if (!res.ok) throw new Error(data.error || res.status);
+  return data.file;
+}
+
+async function uploadBgMusic(files) {
+  for (const f of Array.from(files)) {
+    if (!/\.mp3$/i.test(f.name)) { showAdminToast('Bỏ qua "' + f.name + '": chỉ nhận file MP3', 'error'); continue; }
+    try {
+      const file = await uploadMp3(f);
+      const m = getMusic();
+      m.bg.tracks.push({ name: f.name.replace(/\.mp3$/i, ''), file });
+      if (m.bg.tracks.length === 1) m.bg.enabled = true; // bài đầu tiên → tự bật nhạc nền
+      saveMusic(m);
+      showAdminToast('Đã tải nhạc nền: ' + f.name);
+    } catch (err) {
+      showAdminToast('Tải lên thất bại (' + f.name + '): ' + err.message, 'error');
+    }
+  }
+  renderMusicTab();
+}
+
 async function uploadMusic(group, files) {
   const headers = { 'Content-Type': 'audio/mpeg' };
   if (window.TNAG_API_KEY) headers['X-API-Key'] = window.TNAG_API_KEY;
@@ -1051,7 +1104,44 @@ async function uploadMusic(group, files) {
   renderMusicTab();
 }
 
+function setupBgMusicEvents() {
+  const input = document.getElementById('music-bg-file');
+  if (input) input.addEventListener('change', () => { uploadBgMusic(input.files).then(() => { input.value = ''; }); });
+  const en = document.getElementById('bgm-enabled');
+  if (en) en.addEventListener('change', () => {
+    const m = getMusic();
+    if (en.checked && !m.bg.tracks.length) { en.checked = false; showAdminToast('Hãy tải lên ít nhất 1 bài nhạc nền trước', 'error'); return; }
+    m.bg.enabled = en.checked;
+    saveMusic(m);
+    showAdminToast(en.checked ? 'Đã bật nhạc nền' : 'Đã tắt nhạc nền');
+  });
+  const vol = document.getElementById('bgm-volume');
+  const volText = document.getElementById('bgm-volume-text');
+  if (vol) {
+    vol.addEventListener('input', () => { if (volText) volText.textContent = vol.value + '%'; });
+    vol.addEventListener('change', () => {
+      const m = getMusic();
+      m.bg.volume = Number(vol.value) / 100;
+      saveMusic(m);
+      showAdminToast('Đã lưu âm lượng nhạc nền: ' + vol.value + '%');
+    });
+  }
+  const box = document.getElementById('music-bg-list');
+  if (box) box.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-bg-file]');
+    if (!btn) return;
+    const headers = window.TNAG_API_KEY ? { 'X-API-Key': window.TNAG_API_KEY } : {};
+    try { await fetch(MUSIC_API + '/api/music/' + encodeURIComponent(btn.dataset.bgFile), { method: 'DELETE', headers }); } catch (err) {}
+    const m = getMusic();
+    m.bg.tracks = m.bg.tracks.filter(t => t.file !== btn.dataset.bgFile);
+    if (!m.bg.tracks.length) m.bg.enabled = false;
+    saveMusic(m);
+    renderMusicTab();
+  });
+}
+
 function setupMusicEvents() {
+  setupBgMusicEvents();
   [['all', 'music-all-file']].forEach(([group, id]) => {
     const input = document.getElementById(id);
     if (input) input.addEventListener('change', () => { uploadMusic(group, input.files).then(() => { input.value = ''; }); });

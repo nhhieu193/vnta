@@ -1336,6 +1336,7 @@ function pickMusicTrack() {
 }
 
 function prepareResultMusic(group) {
+  bgMusic.pause(); // bắt đầu quay / gieo quẻ → ngắt nhạc nền
   try {
     if (sound.isMuted()) return;
     if (preparedTrack && preparedTrack.group === group) return; // đã chuẩn bị trong cú bấm trước đó
@@ -1416,6 +1417,103 @@ function stopResultMusic() {
   if (resultTimeHandler) { resultAudio.removeEventListener('timeupdate', resultTimeHandler); resultTimeHandler = null; }
 }
 
+// ---- Nhạc nền nhẹ nhàng (admin cài ở tab Nhạc): phát liên tục, tự ngắt khi quay / gieo quẻ ----
+// Dữ liệu: tnag_music.bg = { enabled, volume (0–1), tracks: [{ name, file }] }
+const bgMusic = (function () {
+  let audio = null;
+  let fadeTimer = null;
+  let wanted = false;      // người dùng đang ở trạng thái "nên có nhạc nền"
+  let lastFile = null;
+
+  function settings() {
+    try {
+      const bg = (JSON.parse(localStorage.getItem('tnag_music') || 'null') || {}).bg || {};
+      const tracks = Array.isArray(bg.tracks) ? bg.tracks : [];
+      const vol = Number(bg.volume);
+      return { enabled: !!bg.enabled && tracks.length > 0, tracks, volume: isFinite(vol) ? Math.min(Math.max(vol, 0), 1) : 0.3 };
+    } catch (e) { return { enabled: false, tracks: [], volume: 0.3 }; }
+  }
+  function pickNext(tracks) {
+    const pool = tracks.length > 1 ? tracks.filter(t => t.file !== lastFile) : tracks;
+    const t = pool[Math.floor(Math.random() * pool.length)];
+    lastFile = t.file;
+    return t;
+  }
+  function getAudio() {
+    if (!audio) {
+      audio = new Audio();
+      audio.preload = 'auto';
+      audio.setAttribute('playsinline', '');
+      // Hết bài → phát bài khác trong danh sách (1 bài thì lặp lại)
+      audio.addEventListener('ended', () => { if (wanted) playTrack(true); });
+    }
+    return audio;
+  }
+  function fadeTo(target, ms, done) {
+    clearInterval(fadeTimer);
+    const a = getAudio();
+    const steps = Math.max(1, Math.round(ms / 50));
+    const from = a.volume;
+    let i = 0;
+    fadeTimer = setInterval(() => {
+      i++;
+      a.volume = Math.min(1, Math.max(0, from + (target - from) * (i / steps)));
+      if (i >= steps) { clearInterval(fadeTimer); if (done) done(); }
+    }, 50);
+  }
+  function playTrack(next) {
+    const s = settings();
+    if (!s.enabled || sound.isMuted()) return;
+    const a = getAudio();
+    if (next || !a.src) {
+      const t = pickNext(s.tracks);
+      a.src = musicUrl(t);
+    }
+    a.volume = 0;
+    a.play().then(() => fadeTo(s.volume, 1200)).catch(err => console.warn('[bgm] Chưa phát được nhạc nền:', err));
+  }
+  // Có thể phát lúc này không? (không phát đè khi đang quay / gieo quẻ / mở kết quả)
+  function busy() {
+    return state.isSpinning || state.queState !== 'idle' || (DOM.resultModal && DOM.resultModal.classList.contains('open'));
+  }
+  return {
+    // Gọi trong cú chạm của người dùng (iPhone chỉ cho phát tiếng khi đó)
+    start() {
+      wanted = true;
+      if (busy()) return;
+      const a = getAudio();
+      if (!a.paused) return;
+      playTrack(false);
+    },
+    // Ngắt nhạc nền (nhanh) để nhường cho nhạc kết quả
+    pause() {
+      if (!audio || audio.paused) return;
+      fadeTo(0, 250, () => audio.pause());
+    },
+    // Đóng kết quả / bật lại âm thanh → phát tiếp bài đang dở
+    resume() {
+      if (!wanted || busy()) return;
+      playTrack(false);
+    },
+    stop() { wanted = false; this.pause(); },
+    refresh() {
+      // Admin đổi cài đặt / người dùng tắt âm → dừng nếu không còn được phép phát
+      const s = settings();
+      if (!s.enabled || sound.isMuted()) this.pause();
+    }
+  };
+})();
+
+// Bắt đầu nhạc nền ở cú chạm đầu tiên (đăng nhập, bấm "Có", chạm bất kỳ...)
+['click', 'touchend'].forEach(evt => document.addEventListener(evt, () => {
+  if (!window.__bgmStarted) { window.__bgmStarted = true; bgMusic.start(); }
+}, { capture: true }));
+// Rời tab / khóa màn hình → tạm dừng; quay lại → phát tiếp
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) bgMusic.pause();
+  else if (window.__bgmStarted) bgMusic.resume();
+});
+
 function openResultModal(dish, fortune = null) {
   playResultMusic(fortune || state.theme === 'que-trua' ? 'que' : 'wheel');
   state.activeDish = dish;
@@ -1467,9 +1565,10 @@ function openResultModal(dish, fortune = null) {
   DOM.resultModal.classList.add('open');
 }
 
-function closeResultModal() {
+function closeResultModal(resumeBg = true) {
   stopResultMusic();
   DOM.resultModal.classList.remove('open');
+  if (resumeBg) bgMusic.resume(); // đóng kết quả → nhạc nền phát tiếp
 }
 
 // ==========================================
@@ -1755,6 +1854,7 @@ function setupEventListeners() {
   DOM.soundToggleBtn.addEventListener('click', () => {
     sound.toggleMute();
     updateAudioButton();
+    if (sound.isMuted()) bgMusic.pause(); else bgMusic.start();
     window.TNAG_TRACKER.log('TOGGLE_SOUND', sound.isMuted() ? 'Tắt âm thanh' : 'Bật âm thanh');
     if (!sound.isMuted()) sound.playTick();
   });
@@ -1902,7 +2002,7 @@ function setupEventListeners() {
 
   DOM.btnSpinAgain.addEventListener('click', () => {
     window.TNAG_TRACKER.log('SPIN_AGAIN', 'Quay/xin lại lần nữa');
-    closeResultModal();
+    closeResultModal(false); // sắp quay tiếp → không bật lại nhạc nền
     // Chuẩn bị nhạc ngay trong cú bấm (iPhone chặn nếu chỉ gọi sau setTimeout)
     sound.init();
     prepareResultMusic(state.theme === 'ket-hoi-tho-lun' ? 'wheel' : 'que');
