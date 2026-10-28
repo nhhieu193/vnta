@@ -2993,7 +2993,7 @@ body {
 .otp-overlay.heart-show .otp-card .otp-subtitle,
 .otp-overlay.merging .otp-title,
 .otp-overlay.merging .otp-subtitle { opacity: 0; transition: opacity 0.4s; }
-.otp-title { font-size: 1.5rem; margin: 0 0 8px; }
+.otp-title { font-size: 1.5rem; margin: 0 0 18px; }
 .otp-subtitle { margin: 0 0 18px; opacity: 0.8; font-size: 0.95rem; }
 .otp-code-display { display: flex; justify-content: center; gap: 10px; margin-bottom: 22px; transition: opacity 0.4s; }
 .otp-code-display span {
