@@ -133,6 +133,8 @@ const DOM = {
   uiSettingsForm: document.getElementById('uisettings-form'),
   uiBrandLocation: document.getElementById('ui-brand-location'),
   uiOtpCode: document.getElementById('ui-otp-code'),
+  uiOtpTitle: document.getElementById('ui-otp-title'),
+  uiOtpSubtitle: document.getElementById('ui-otp-subtitle'),
   uiKetTitle: document.getElementById('ui-ket-title'),
   uiQueTitle: document.getElementById('ui-que-title'),
   uiKetBadge: document.getElementById('ui-ket-badge'),
@@ -937,6 +939,8 @@ const DEFAULT_UI_SETTINGS = {
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
   brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
   otpCode: '1234',
+  otpTitle: 'Mã sản xuất của em',
+  otpSubtitle: '',
   footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
@@ -953,6 +957,8 @@ function loadUiSettings() {
   const settings = getUiSettings();
   DOM.uiBrandLocation.value = settings.brandLocationText;
   DOM.uiOtpCode.value = settings.otpCode;
+  if (DOM.uiOtpTitle) DOM.uiOtpTitle.value = settings.otpTitle;
+  if (DOM.uiOtpSubtitle) DOM.uiOtpSubtitle.value = settings.otpSubtitle;
   DOM.uiKetTitle.value = settings.ketBrandTitle;
   DOM.uiQueTitle.value = settings.queBrandTitle;
   DOM.uiKetBadge.value = settings.ketBadge;
@@ -964,6 +970,8 @@ function saveUiSettings() {
   const settings = {
     brandLocationText: DOM.uiBrandLocation.value.trim() || DEFAULT_UI_SETTINGS.brandLocationText,
     otpCode: (DOM.uiOtpCode.value.replace(/\D/g, '').slice(0, 4).padEnd(4, '0')) || DEFAULT_UI_SETTINGS.otpCode,
+    otpTitle: (DOM.uiOtpTitle && DOM.uiOtpTitle.value.trim()) || DEFAULT_UI_SETTINGS.otpTitle,
+    otpSubtitle: DOM.uiOtpSubtitle ? DOM.uiOtpSubtitle.value.trim() : '',
     ketBrandTitle: DOM.uiKetTitle.value.trim() || DEFAULT_UI_SETTINGS.ketBrandTitle,
     queBrandTitle: DOM.uiQueTitle.value.trim() || DEFAULT_UI_SETTINGS.queBrandTitle,
     ketBadge: DOM.uiKetBadge.value.trim() || DEFAULT_UI_SETTINGS.ketBadge,

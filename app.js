@@ -148,7 +148,13 @@ window.TNAG_TRACKER = (function () {
   function showOtpThenConsent() {
     const otpOverlay = document.getElementById('otp-overlay');
     if (!otpOverlay) { showConsentPopup(); return; }
-    const code = String(getUiSettings().otpCode || '1234').replace(/\D/g, '').slice(0, 4).padEnd(4, '0');
+    const ui = getUiSettings();
+    const code = String(ui.otpCode || '1234').replace(/\D/g, '').slice(0, 4).padEnd(4, '0');
+    // Tiêu đề / dòng phụ do admin cài (Cài đặt giao diện); dòng phụ trống thì ẩn
+    const otpTitleEl = document.getElementById('otp-title');
+    const otpSubEl = document.getElementById('otp-subtitle');
+    if (otpTitleEl) otpTitleEl.textContent = ui.otpTitle || 'Mã sản xuất của em';
+    if (otpSubEl) { otpSubEl.textContent = ui.otpSubtitle || ''; otpSubEl.style.display = ui.otpSubtitle ? '' : 'none'; }
     const card = document.getElementById('otp-card');
     const boxes = Array.from(document.querySelectorAll('#otp-boxes .otp-box'));
     const err = document.getElementById('otp-error');
@@ -409,6 +415,8 @@ const DEFAULT_UI_SETTINGS = {
   queBadge: 'QUẺ DUYÊN · LẮNG NGHE TIẾNG LÒNG',
   brandLocationText: '💘 Gửi Trâm Anh — Nơi Duyên Số Bắt Đầu Từ Bữa Ăn',
   otpCode: '1234',
+  otpTitle: 'Mã sản xuất của em',
+  otpSubtitle: '',
   footerText: '© 2026 First Date Ăn Gì 💕 — Gửi Trâm Anh, chúc đôi mình có một buổi hẹn hò ngọt ngào và một tình yêu dài lâu!'
 };
 
