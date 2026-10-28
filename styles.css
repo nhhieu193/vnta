@@ -3212,3 +3212,16 @@ html, body { overflow-x: clip; }
 @media (max-width: 480px) {
   .heart-source-btn { width: 38px; height: 38px; font-size: 1.05rem; opacity: 0.75; }
 }
+
+/* Nút trong popup kết quả: icon + chữ luôn đi liền nhau, 1 dòng, căn giữa */
+.modal-btn { white-space: nowrap; text-align: center; min-height: 48px; }
+.modal-btn > span { flex: 0 0 auto; }
+/* Hai nút Xóa / Giữ lại: luôn 2 cột bằng nhau (nhãn đã rút gọn nên vừa cả máy 320px) */
+/* Quy tắc chung [class*="-btn"] { display: inline-flex } vô tình khớp cả khung "decision-btn-row"
+   → 2 nút bị co theo chữ, lệch nhau. Ép lại thành lưới 2 cột bằng nhau. */
+.decision-btn-row { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; width: 100%; }
+.decision-btn-row .modal-btn { min-width: 0; padding: 0.7rem 0.6rem; gap: 0.35rem; }
+@media (max-width: 360px) {
+  .decision-btn-row .modal-btn { font-size: 0.82rem; padding: 0.6rem 0.4rem; }
+  .decision-btn-row .modal-btn > span:first-child { display: none; } /* máy rất nhỏ: bỏ icon cho đủ chỗ chữ */
+}
