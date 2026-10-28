@@ -987,12 +987,13 @@ function saveUiSettings() {
 // ==========================================
 const MUSIC_API = (window.TNAG_API_BASE || '').replace(/\/+$/, '');
 
-// Một danh sách nhạc dùng chung cho quẻ + vòng quay: { all: [...] }.
+// Một danh sách nhạc dùng chung cho quẻ + vòng quay: { all: [...], priority: '<file>' }.
+// priority = bài phát cho kết quả ĐẦU TIÊN sau mỗi lần người dùng đăng nhập (quay hoặc gieo quẻ).
 // Dữ liệu cũ tách 2 nhóm { que, wheel } được gộp lại (bỏ bài ở nhóm vòng quay trùng tên với nhóm quẻ).
 function getMusic() {
   try {
     const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
-    if (Array.isArray(m.all)) return { all: m.all };
+    if (Array.isArray(m.all)) return { all: m.all, priority: m.priority || null };
     const que = m.que || [], wheel = m.wheel || [];
     const names = new Set(que.map(t => t.name));
     return { all: que.concat(wheel.filter(t => !names.has(t.name))), legacy: !!(m.que || m.wheel) };
@@ -1015,14 +1016,16 @@ function renderMusicTab() {
       box.innerHTML = '<p class="panel-desc">Chưa có bài nào.</p>';
       return;
     }
-    box.innerHTML = m[group].map((t, i) => `
-      <div class="music-item">
-        <span class="music-name">${i + 1}. ${escapeHtml(t.name)}</span>
+    const hasPriority = m[group].some(t => t.file === m.priority);
+    box.innerHTML = (hasPriority ? '' : '<p class="panel-desc music-priority-hint">⭐ Chưa chọn bài ưu tiên — lần đầu cũng phát ngẫu nhiên.</p>') + m[group].map((t, i) => `
+      <div class="music-item${t.file === m.priority ? ' is-priority' : ''}">
+        <span class="music-name">${i + 1}. ${escapeHtml(t.name)}${t.file === m.priority ? ' <span class="music-priority-badge">⭐ Ưu tiên lần đầu</span>' : ''}</span>
         <audio controls preload="none" src="${MUSIC_API}/uploads/music/${encodeURIComponent(t.file)}"></audio>
         <span class="music-range">Phát từ
           <input type="number" min="0" step="1" class="music-start" data-group="${group}" data-file="${escapeHtml(t.file)}" value="${t.start == null ? '' : t.start}" placeholder="0" /> đến
           <input type="number" min="0" step="1" class="music-end" data-group="${group}" data-file="${escapeHtml(t.file)}" value="${t.end == null ? '' : t.end}" placeholder="hết bài" /> giây
         </span>
+        <button type="button" class="music-priority-btn" data-prio-file="${escapeHtml(t.file)}">${t.file === m.priority ? '✖ Bỏ ưu tiên' : '⭐ Đặt ưu tiên'}</button>
         <button type="button" class="btn-delete-user" data-group="${group}" data-file="${escapeHtml(t.file)}">🗑 Xóa</button>
       </div>`).join('');
   });
@@ -1092,6 +1095,16 @@ function setupMusicEvents() {
       saveMusic(m);
       showAdminToast('Đã lưu đoạn phát');
     });
+    // Chọn / bỏ bài ưu tiên (chỉ 1 bài)
+    box.addEventListener('click', (e) => {
+      const pb = e.target.closest('button[data-prio-file]');
+      if (!pb) return;
+      const m = getMusic();
+      m.priority = m.priority === pb.dataset.prioFile ? null : pb.dataset.prioFile;
+      saveMusic(m);
+      renderMusicTab();
+      showAdminToast(m.priority ? 'Đã đặt bài ưu tiên cho lần quay / gieo quẻ đầu tiên' : 'Đã bỏ bài ưu tiên');
+    });
     box.addEventListener('click', async (e) => {
       const btn = e.target.closest('button[data-file]');
       if (!btn) return;
@@ -1099,6 +1112,7 @@ function setupMusicEvents() {
       try { await fetch(MUSIC_API + '/api/music/' + encodeURIComponent(btn.dataset.file), { method: 'DELETE', headers }); } catch (err) {}
       const m = getMusic();
       m[btn.dataset.group] = m[btn.dataset.group].filter(t => t.file !== btn.dataset.file);
+      if (m.priority === btn.dataset.file) m.priority = null;
       saveMusic(m);
       renderMusicTab();
     });

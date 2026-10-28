@@ -287,6 +287,8 @@ window.TNAG_TRACKER = (function () {
     });
     sessionStorage.setItem('tnag_current_user', sessionData);
     localStorage.setItem('tnag_current_user', sessionData);
+    // Kết quả đầu tiên sau lần đăng nhập này sẽ phát bài nhạc ưu tiên (nếu admin có chọn)
+    sessionStorage.setItem('tnag_first_music_pending', '1');
 
     window.TNAG_TRACKER.log('LOGIN', 'Đăng nhập thành công: ' + matchedUser.username + ' (' + matchedUser.role + ')');
     updateUserHeaderProfile(matchedUser);
@@ -1311,10 +1313,22 @@ function getMusicList() {
     return que.concat(wheel.filter(t => !names.has(t.name)));
   } catch (e) { return []; }
 }
+// Bài admin chọn "ưu tiên lần đầu": phát cho kết quả đầu tiên sau mỗi lần đăng nhập
+function getPriorityTrack(list) {
+  try {
+    const m = JSON.parse(localStorage.getItem('tnag_music') || 'null') || {};
+    return m.priority ? list.find(t => t.file === m.priority) || null : null;
+  } catch (e) { return null; }
+}
 // Random nhưng tránh lặp lại đúng bài vừa phát (khi có từ 2 bài trở lên), tính chung cho cả quẻ và vòng quay
 function pickMusicTrack() {
   const list = getMusicList();
   if (!list.length) return null;
+  if (sessionStorage.getItem('tnag_first_music_pending') === '1') {
+    sessionStorage.removeItem('tnag_first_music_pending');
+    const first = getPriorityTrack(list);
+    if (first) { lastTrackFile.all = first.file; return first; }
+  }
   const pool = list.length > 1 ? list.filter(t => t.file !== lastTrackFile.all) : list;
   const track = pool[Math.floor(Math.random() * pool.length)];
   lastTrackFile.all = track.file;
