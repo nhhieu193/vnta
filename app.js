@@ -434,7 +434,7 @@ function getUiSettings() {
 // ==========================================
 const DEFAULT_PLAN_THANKYOU = {
   title: 'Cảm ơn bạn!',
-  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc bạn có một buổi trưa thật vui vẻ!'
+  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc hai bạn có một buổi hẹn thật vui vẻ!'
 };
 
 function getPlanCafes() {
@@ -918,24 +918,31 @@ function drawWheel(angle = 0) {
     // Render Slice Text
     ctx.save();
     const midAngle = startAngle + arc / 2;
-    ctx.rotate(midAngle);
-    ctx.textAlign = 'right';
+    // Ô nằm ở nửa trái (theo góc thực tế khi đang xoay) → xoay thêm 180° để chữ không bị lộn ngược
+    const flip = Math.cos(midAngle + angle) < 0;
+    ctx.rotate(flip ? midAngle + Math.PI : midAngle);
+    ctx.textAlign = flip ? 'left' : 'right';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
     ctx.shadowBlur = 4;
 
-    const fontSize = total > 12 ? 11 : total > 8 ? 13 : 14;
+    const textRadius = radius - 24;
+    const maxWidth = textRadius - 46; // chừa chỗ cho nút QUAY ở giữa
+    let fontSize = total > 12 ? 11 : total > 8 ? 13 : 14;
     ctx.font = `800 ${fontSize}px "Be Vietnam Pro", sans-serif`;
-
+    // Co chữ (tối thiểu 10px) cho vừa ô, chỉ cắt "…" khi vẫn không vừa
+    while (ctx.measureText(dish.name).width > maxWidth && fontSize > 10) {
+      fontSize -= 1;
+      ctx.font = `800 ${fontSize}px "Be Vietnam Pro", sans-serif`;
+    }
     let displayName = dish.name;
-    const maxChars = total > 10 ? 12 : 16;
-    if (displayName.length > maxChars) {
-      displayName = displayName.substring(0, maxChars - 1) + '…';
+    if (ctx.measureText(displayName).width > maxWidth) {
+      while (displayName.length > 1 && ctx.measureText(displayName + '…').width > maxWidth) displayName = displayName.slice(0, -1);
+      displayName = displayName.trimEnd() + '…';
     }
 
-    const textRadius = radius - 24;
-    ctx.fillText(displayName, textRadius, 0);
+    ctx.fillText(displayName, flip ? -textRadius : textRadius, 0);
 
     ctx.restore();
   }
@@ -975,6 +982,11 @@ function spinCircularWheel() {
   sound.init();
   prepareResultMusic('wheel');
   sound.playSpinStart();
+  // Trên mobile nút quay nằm dưới danh sách món → cuộn vòng quay vào giữa màn hình để thấy nó xoay
+  try {
+    const r = DOM.wheelCanvas.getBoundingClientRect();
+    if (r.top < 60 || r.bottom > window.innerHeight - 80) DOM.wheelCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (e) {}
 
   const total = state.wheelDishes.length;
   const arc = (Math.PI * 2) / total;
@@ -1408,7 +1420,9 @@ function openResultModal(dish, fortune = null) {
 
   DOM.modalFoodImg.src = dish.image;
   DOM.modalFoodImg.alt = dish.name;
+  DOM.modalFoodImg.style.visibility = '';
   DOM.modalFoodImg.onerror = () => {
+    DOM.modalFoodImg.onerror = () => { DOM.modalFoodImg.onerror = null; DOM.modalFoodImg.style.visibility = 'hidden'; };
     DOM.modalFoodImg.src = 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80';
   };
 
@@ -1597,8 +1611,8 @@ function renderCatalog(dishes) {
     const deliveryTime = 20 + (idx % 4) * 5;
 
     card.innerHTML = `
-      <div class="catalog-img-wrap">
-        <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80'" />
+      <div class="catalog-img-wrap" data-emoji="${dish.emoji || '🍲'}">
+        <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.classList.add('img-fallback'); this.style.visibility='hidden';" />
         <div class="catalog-tag-overlay">
           <span class="${dish.isVegetarian ? 'swiggy-veg-icon' : 'swiggy-nonveg-icon'}" title="${dish.isVegetarian ? 'Món Chay' : 'Món Mặn'}"></span>
           <span class="delivery-time-badge">⚡ ${deliveryTime} PHÚT</span>

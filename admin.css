@@ -1187,3 +1187,29 @@ th, td { vertical-align: middle; }
 .music-item audio { height: 36px; max-width: 100%; }
 .music-range { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .music-range input { width: 80px; padding: 4px 6px; border: 1px solid var(--admin-border); border-radius: 8px; }
+
+/* =========================================================
+   MOBILE QA FIXES
+   ========================================================= */
+/* Nội dung chính không bị bảng dữ liệu đẩy rộng cả trang (bảng tự cuộn trong .table-wrap) */
+.admin-main { min-width: 0; }
+.tab-content, .panel { min-width: 0; max-width: 100%; }
+html, body { overflow-x: clip; }
+
+/* Nút ☰ chỉ hiện trên mobile (quy tắc [class*="-btn"] phía trên làm nó hiện cả trên desktop) */
+@media (min-width: 769px) { .mobile-menu-btn { display: none !important; } }
+
+@media (max-width: 768px) {
+  .mobile-menu-btn { display: inline-flex !important; width: 44px; height: 44px; flex: 0 0 44px; margin-left: -10px; }
+  #dish-veg { width: 20px !important; height: 20px; }
+  /* Nền mờ phía sau menu; chạm ra ngoài để đóng (xử lý trong admin.js) */
+  .admin-sidebar.open { box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.55); }
+  .search-wrap { padding: 0 14px; width: 100%; }
+  .search-wrap input { flex: 1; width: auto; min-width: 0; min-height: 44px; }
+  .chip { min-height: 40px; }
+  .btn-toggle-eye-row { min-width: 40px; min-height: 40px; }
+  .panel-header { flex-wrap: wrap; gap: 10px; }
+  .admin-header { gap: 8px; }
+  .admin-header > * { min-width: 0; }
+}
+@media (max-width: 480px) { .admin-header .user-greeting { display: none; } }

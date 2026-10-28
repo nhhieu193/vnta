@@ -3086,3 +3086,83 @@ input[type="text"], input[type="password"], input[type="number"], input[type="se
 /* Hộp quẻ bấm được để lắc */
 .bamboo-cylinder-wrap { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .bamboo-cylinder-wrap:active .bamboo-cylinder:not(.shaking) { transform: scale(0.97); }
+
+/* =========================================================
+   MOBILE QA FIXES (kiểm thử giao diện mobile 390px / 320px)
+   ========================================================= */
+/* Lưới an toàn: không bao giờ cho trang kéo ngang (clip không phá position: sticky) */
+html, body { overflow-x: clip; }
+
+/* Chữ dọc trên quẻ / hộp quẻ: xếp từng chữ thành 1 cột (đọc từ trên xuống, không ngược như writing-mode) */
+.stick-seal, .bamboo-label {
+  writing-mode: horizontal-tb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+.stick-seal .v-gap, .bamboo-label .v-gap { height: 0.35em; }
+.bamboo-label { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
+.fallen-stick-head { font-size: 0.78rem; }
+
+/* Giá trên thẻ thực đơn: "Đặt món →" luôn 1 dòng, thẳng hàng với giá */
+.catalog-price-row { gap: 0.4rem; flex-wrap: wrap; }
+.order-link-text { white-space: nowrap; }
+/* Ảnh món lỗi → hiện emoji thay vì ô trống */
+.catalog-img-wrap.img-fallback {
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(245, 158, 11, 0.25), rgba(18, 23, 47, 0.9));
+}
+.catalog-img-wrap.img-fallback::before { content: attr(data-emoji); font-size: 3.2rem; }
+
+/* Bớt rớt chữ lẻ cuối dòng */
+.modal-dish-price, .cta-spin-btn, .action-row-primary button, .result-action-btn, .plan-thankyou-message { text-wrap: balance; }
+
+/* Popup Có/Không: tiêu đề / lời nhắn trống thì không chiếm chỗ */
+.consent-title:empty, .consent-message:empty { display: none; }
+
+@media (max-width: 768px) {
+  /* Dải danh mục + ngân sách: co theo màn hình, tab danh mục cuộn ngang bên trong */
+  .controls-section > * { max-width: 100%; }
+  .filter-row { width: 100%; }
+  .category-tabs { min-width: 0; }
+  .budget-select-wrapper { min-width: 0; max-width: 100%; }
+
+  /* Vòng quay + bảng món: cột lưới không bị nội dung đẩy rộng quá màn hình */
+  .wheel-arena-wrapper { grid-template-columns: minmax(0, 1fr); }
+  .wheel-stage, .dish-manager-panel { min-width: 0; }
+  .wheel-chip { min-height: 40px; max-width: 100%; }
+  .chip-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Vùng chạm tối thiểu ~40–44px */
+  .chip-del-btn { min-width: 36px; min-height: 36px; margin: -4px -10px -4px -4px; font-size: 1.15rem; }
+  .quick-act-btn { min-height: 42px; }
+  .cat-btn { min-height: 42px; }
+  .sound-toggle-btn, .user-logout-btn { min-width: 42px; min-height: 42px; }
+  .close-modal-btn { width: 42px !important; height: 42px !important; flex-shrink: 0; }
+  .plan-chip { min-height: 44px; }
+  .veg-filter-label input[type="checkbox"] { width: 20px; height: 20px; }
+  .heart-source-btn { width: 44px; height: 44px; }
+
+  /* Tim bay trang trí: mờ đi để không che chữ */
+  .floating-hearts-container { opacity: 0.55; }
+
+  /* Header: nút không xuống dòng */
+  .header-right, .header-right * { white-space: nowrap; }
+  .header-right { flex-shrink: 0; }
+  .brand-wrapper, .brand-titles { min-width: 0; }
+}
+
+/* Máy nhỏ 320–380px: thu gọn header để đủ chỗ cho 3 nút */
+@media (max-width: 380px) {
+  .site-header { padding: 0.55rem 0.6rem; gap: 0.45rem; }
+  .brand-wrapper { gap: 0.5rem; }
+  .swiggy-logo-badge { width: 38px; height: 38px; font-size: 1.2rem; }
+  .brand-titles h1 { font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand-location { display: none; }
+  .header-right { gap: 0.35rem; }
+  .sound-toggle-btn, .user-logout-btn { min-width: 40px; min-height: 40px; }
+}
+/* Huy hiệu "6 món" không xuống dòng trên máy nhỏ */
+#wheel-count-badge { white-space: nowrap; flex-shrink: 0; }

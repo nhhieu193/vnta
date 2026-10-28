@@ -1110,7 +1110,7 @@ function setupMusicEvents() {
 // ==========================================
 const DEFAULT_PLAN_THANKYOU = {
   title: 'Cảm ơn bạn!',
-  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc bạn có một buổi trưa thật vui vẻ!'
+  message: 'Kế hoạch của bạn đã được ghi nhận. Chúc hai bạn có một buổi hẹn thật vui vẻ!'
 };
 
 function getPlanCafes() {
@@ -1348,6 +1348,12 @@ function setupEvents() {
 
   // Mobile menu toggle
   if (DOM.mobileMenuBtn) {
+    // Chạm ra ngoài menu (vùng nền mờ) thì đóng menu
+    document.addEventListener('click', (e) => {
+      if (!DOM.sidebar.classList.contains('open')) return;
+      if (DOM.sidebar.contains(e.target) || DOM.mobileMenuBtn.contains(e.target)) return;
+      DOM.sidebar.classList.remove('open');
+    });
     DOM.mobileMenuBtn.addEventListener('click', () => {
       DOM.sidebar.classList.toggle('open');
     });
